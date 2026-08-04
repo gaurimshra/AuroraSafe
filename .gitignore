@@ -1,0 +1,48 @@
+# Environment
+.env
+.env.*
+!.env.example
+!.env.local.example
+frontend/.env.local
+backend/.env
+
+# User-requested excluded files
+*.md
+*.jpg
+*.jpeg
+*.png
+
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Next.js
+.next/
+frontend/.next/
+out/
+frontend/out/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+
+# Local data and generated artifacts
+*.db
+*.sqlite
+*.sqlite3
+backend/aurorasafe.db
+backend/ml/*.pkl
+
+# Logs and local process files
+*.log
+*.pid
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

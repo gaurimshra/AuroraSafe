@@ -1,0 +1,235 @@
+'use client'
+import { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
+import { AlertTriangle, ShieldCheck, Clock, Activity, Loader2, RefreshCw } from 'lucide-react'
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Legend
+} from 'recharts'
+import RiskBadge from '@/components/RiskBadge'
+import { getDashboardStats, getDashboardTrends, getDashboardCategories, getZones } from '@/lib/api'
+
+const ZONE_COLORS: Record<string, string> = {
+  theft: '#f59e0b',
+  assault: '#ef4444',
+  harassment: '#8b5cf6',
+  suspicious_activity: '#06b6d4',
+  vandalism: '#f97316',
+  accident: '#22c55e',
+  other: '#6b7280'
+}
+
+export default function DashboardPage() {
+  const [stats, setStats] = useState<any>(null)
+  const [trends, setTrends] = useState<any[]>([])
+  const [categories, setCategories] = useState<any[]>([])
+  const [zones, setZones] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+
+  const customTooltipStyle = {
+    backgroundColor: '#111128',
+    border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: '8px',
+    color: '#f1f5f9'
+  }
+
+  const loadData = async () => {
+    try {
+      const [statsData, trendsData, catData, zonesData] = await Promise.all([
+        getDashboardStats(),
+        getDashboardTrends(),
+        getDashboardCategories(),
+        getZones()
+      ])
+      setStats(statsData)
+      // Format trends for chart (last 14 days, with day names)
+      const formattedTrends = trendsData.slice(-14).map((t: any) => ({
+        name: new Date(t.date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }),
+        incidents: t.count,
+        high_risk: t.high_risk
+      }))
+      setTrends(formattedTrends)
+      setCategories(catData.map((c: any) => ({
+        name: c.name.replace('_', ' '),
+        value: c.count,
+        pct: c.percentage
+      })))
+      setZones(zonesData.slice(0, 5))
+      setLastUpdated(new Date())
+    } catch (err) {
+      console.error('Dashboard data error:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadData()
+    const interval = setInterval(loadData, 60000)
+    return () => clearInterval(interval)
+  }, [])
+
+  const StatCard = ({ label, value, icon: Icon, color, bg }: any) => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="glass-card p-6 flex items-center space-x-4"
+    >
+      <div className={`p-4 rounded-xl ${bg}`}>
+        <Icon className={`w-7 h-7 ${color}`} />
+      </div>
+      <div>
+        {loading ? (
+          <div className="w-16 h-7 bg-surface animate-pulse rounded mb-1" />
+        ) : (
+          <div className="text-2xl font-bold text-white">{value}</div>
+        )}
+        <div className="text-sm text-text-secondary">{label}</div>
+      </div>
+    </motion.div>
+  )
+
+  return (
+    <div className="min-h-screen pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-10">
+        <div>
+          <h1 className="text-3xl font-extrabold">Safety Analytics Dashboard</h1>
+          <p className="text-text-secondary mt-1">Real-time intelligence from community reports.</p>
+        </div>
+        <div className="flex items-center space-x-4 mt-4 md:mt-0">
+          <div className="text-sm text-text-secondary bg-card px-4 py-2 rounded-lg border border-border flex items-center">
+            <span className="w-2 h-2 rounded-full bg-safe animate-pulse mr-2" />
+            {lastUpdated ? `Updated ${lastUpdated.toLocaleTimeString()}` : 'Loading...'}
+          </div>
+          <button
+            onClick={loadData}
+            className="p-2 rounded-lg border border-border text-text-secondary hover:text-white hover:border-primary transition-colors"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Stats Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        <StatCard label="Total Incidents" value={stats?.total_incidents ?? '—'} icon={Activity} color="text-primary" bg="bg-primary/20" />
+        <StatCard label="High Risk Zones" value={stats?.high_risk_zones ?? '—'} icon={AlertTriangle} color="text-danger" bg="bg-danger/20" />
+        <StatCard
+          label="Verified Reports"
+          value={stats ? `${Math.round((stats.verified_incidents / (stats.total_incidents || 1)) * 100)}%` : '—'}
+          icon={ShieldCheck} color="text-safe" bg="bg-safe/20"
+        />
+        <StatCard label="Pending AI Review" value={stats?.pending_incidents ?? '—'} icon={Clock} color="text-warning" bg="bg-warning/20" />
+      </div>
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+        {/* Area chart — trends */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="glass-card p-6">
+          <h3 className="text-lg font-bold mb-6">Incidents Over Time (Last 14 Days)</h3>
+          {trends.length === 0 && loading ? (
+            <div className="h-[300px] flex items-center justify-center">
+              <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            </div>
+          ) : trends.length === 0 ? (
+            <div className="h-[300px] flex items-center justify-center text-text-secondary text-sm">No trend data available yet.</div>
+          ) : (
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={trends}>
+                  <defs>
+                    <linearGradient id="colorInc" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorHR" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.6}/>
+                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+                  <XAxis dataKey="name" stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} />
+                  <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={customTooltipStyle} />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Area type="monotone" dataKey="incidents" name="Total" stroke="#8b5cf6" strokeWidth={2} fillOpacity={1} fill="url(#colorInc)" />
+                  <Area type="monotone" dataKey="high_risk" name="High Risk" stroke="#ef4444" strokeWidth={2} fillOpacity={1} fill="url(#colorHR)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </motion.div>
+
+        {/* Pie chart — incident categories */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="glass-card p-6">
+          <h3 className="text-lg font-bold mb-6">Incident Categories</h3>
+          {categories.length === 0 && loading ? (
+            <div className="h-[300px] flex items-center justify-center">
+              <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            </div>
+          ) : categories.length === 0 ? (
+            <div className="h-[300px] flex items-center justify-center text-text-secondary text-sm">No data yet.</div>
+          ) : (
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={categories} cx="50%" cy="50%" outerRadius={100} dataKey="value" label={({ name, pct }) => `${pct}%`}>
+                    {categories.map((c, i) => (
+                      <Cell key={i} fill={ZONE_COLORS[c.name.replace(' ', '_')] || `hsl(${i * 60}, 70%, 55%)`} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={customTooltipStyle} formatter={(val: any, name: any, props: any) => [`${val} incidents`, props.payload.name]} />
+                  <Legend wrapperStyle={{ fontSize: 12 }} formatter={(val) => val.replace('_', ' ')} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </motion.div>
+      </div>
+
+      {/* Hotspots Table */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="glass-card overflow-hidden">
+        <div className="p-6 border-b border-border flex items-center justify-between">
+          <h3 className="text-lg font-bold">Active Hotspot Zones (AI-Detected)</h3>
+          <span className="text-xs text-text-secondary bg-surface px-3 py-1 rounded-full border border-border">DBSCAN clustering</span>
+        </div>
+        {zones.length === 0 && loading ? (
+          <div className="p-12 flex justify-center">
+            <Loader2 className="w-8 h-8 text-primary animate-spin" />
+          </div>
+        ) : zones.length === 0 ? (
+          <div className="p-12 text-center text-text-secondary text-sm">No hotspots detected yet — need more incident data.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead className="bg-surface/50 text-text-secondary text-sm">
+                <tr>
+                  <th className="px-6 py-4 font-medium">Center Coordinates</th>
+                  <th className="px-6 py-4 font-medium">Risk Level</th>
+                  <th className="px-6 py-4 font-medium">Incidents</th>
+                  <th className="px-6 py-4 font-medium">Dominant Type</th>
+                  <th className="px-6 py-4 font-medium">Radius</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {zones.map((zone, i) => (
+                  <tr key={i} className="hover:bg-surface/30 transition-colors">
+                    <td className="px-6 py-4 font-mono text-sm text-white">
+                      {zone.lat.toFixed(4)}, {zone.lng.toFixed(4)}
+                    </td>
+                    <td className="px-6 py-4"><RiskBadge zone={zone.risk_level} /></td>
+                    <td className="px-6 py-4 text-white font-bold">{zone.incident_count}</td>
+                    <td className="px-6 py-4 text-text-secondary capitalize">{zone.dominant_type?.replace('_', ' ')}</td>
+                    <td className="px-6 py-4 text-text-secondary">{zone.radius.toFixed(2)} km</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </motion.div>
+    </div>
+  )
+}
