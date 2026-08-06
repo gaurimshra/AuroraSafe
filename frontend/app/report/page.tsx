@@ -21,7 +21,7 @@ export default function ReportPage() {
   const [submitted, setSubmitted] = useState(false)
   const [result, setResult] = useState<any>(null)
   const [error, setError] = useState('')
-  const [coords, setCoords] = useState({ lat: 12.9716, lng: 77.5946 })
+  const [coords, setCoords] = useState({ lat: 28.6139, lng: 77.2090 })
   const [address, setAddress] = useState('')
   const [description, setDescription] = useState('')
   const [locating, setLocating] = useState(false)

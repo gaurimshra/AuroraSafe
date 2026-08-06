@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { ClerkProvider } from '@clerk/nextjs'
 import { ThemeProvider } from '@/lib/ThemeContext'
 import AppShell from '@/components/AppShell'
 
@@ -11,14 +12,16 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body suppressHydrationWarning>
-        <ThemeProvider>
-          <AppShell>
-            {children}
-          </AppShell>
-        </ThemeProvider>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en" suppressHydrationWarning>
+        <body suppressHydrationWarning>
+          <ThemeProvider>
+            <AppShell>
+              {children}
+            </AppShell>
+          </ThemeProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   )
 }

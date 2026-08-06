@@ -7,25 +7,25 @@ from models.incident import Incident
 
 async def seed_incidents():
     neighborhoods = [
-        {"name": "Koramangala", "coords": (12.9352, 77.6245)},
-        {"name": "MG Road", "coords": (12.9719, 77.5937)},
-        {"name": "Marathahalli", "coords": (12.9580, 77.6513)},
-        {"name": "Rajajinagar", "coords": (13.0012, 77.5553)},
-        {"name": "Jayanagar", "coords": (12.9257, 77.5828)},
-        {"name": "Indiranagar", "coords": (12.9784, 77.6408)},
-        {"name": "HSR Layout", "coords": (12.9116, 77.6389)},
-        {"name": "Whitefield", "coords": (12.9698, 77.7499)},
-        {"name": "Banashankari", "coords": (12.9256, 77.5662)},
-        {"name": "Electronic City", "coords": (12.8399, 77.6770)}
+        {"name": "Connaught Place", "coords": (28.6304, 77.2177)},
+        {"name": "Lajpat Nagar", "coords": (28.5677, 77.2433)},
+        {"name": "Karol Bagh", "coords": (28.6519, 77.1895)},
+        {"name": "Saket", "coords": (28.5245, 77.2066)},
+        {"name": "Dwarka", "coords": (28.5823, 77.0500)},
+        {"name": "Rohini", "coords": (28.7365, 77.1130)},
+        {"name": "Sector 18, Noida", "coords": (28.5708, 77.3261)},
+        {"name": "Sector 62, Noida", "coords": (28.6208, 77.3639)},
+        {"name": "Indirapuram, Ghaziabad", "coords": (28.6415, 77.3714)},
+        {"name": "Vaishali, Ghaziabad", "coords": (28.6412, 77.3374)}
     ]
     
     incident_templates = {
-        "theft": ["Bag snatching reported", "Mobile phone theft", "Pickpocket at market"],
-        "assault": ["Physical altercation reported", "Person attacked near ATM"],
-        "harassment": ["Street harassment reported", "Verbal abuse incident"],
-        "suspicious_activity": ["Suspicious person loitering", "Unknown vehicle parked overnight"],
-        "vandalism": ["Property damage reported", "Graffiti on public walls"],
-        "accident": ["Road accident reported", "Minor vehicle collision"]
+        "theft": ["Bag snatching reported near metro", "Mobile phone theft from e-rickshaw", "Pickpocket at busy market"],
+        "assault": ["Physical altercation reported at bus stand", "Woman attacked in secluded alley", "Attempted mugging in park"],
+        "harassment": ["Street harassment reported by cab driver", "Catcalling and verbal abuse by group of men", "Stalking reported near women's college"],
+        "suspicious_activity": ["Suspicious person following women home", "Unknown vehicle parked overnight near hostel", "Men loitering near public washroom"],
+        "vandalism": ["Street lights deliberately broken in alleyway", "Bus stop shelter damaged"],
+        "accident": ["Minor vehicle collision outside mall", "Hit and run near crossing"]
     }
     
     incidents = []
@@ -67,7 +67,7 @@ async def seed_incidents():
         risk_score = min(1.0, max(0.0, severity / 10.0 + rng.normal(0, 0.1)))
         confidence = float(rng.uniform(0.6, 0.95))
         
-        address = f"Near Landmark, {nhood['name']}, Bangalore"
+        address = f"Near Landmark, {nhood['name']}, Delhi NCR"
         
         inc = Incident(
             latitude=float(lat),
@@ -81,7 +81,8 @@ async def seed_incidents():
             status=status,
             address=address,
             ai_summary=summary,
-            created_at=created_at
+            created_at=created_at,
+            source="seed_data"
         )
         incidents.append(inc)
         

@@ -13,6 +13,6 @@ async def get_db():
         yield session
 
 async def init_db():
-    from models import user, incident, sos_contact  # noqa - import models to register them
+    from models import user, incident, sos_contact, sos_event, saved_route  # noqa - import models to register them
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

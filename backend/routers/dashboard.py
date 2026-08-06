@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select, func, case
 from datetime import datetime, timedelta
 
 from database import get_db
@@ -19,6 +19,20 @@ async def get_stats(db: AsyncSession = Depends(get_db)):
     verified = sum(1 for i in incidents if i.status == "verified")
     pending = sum(1 for i in incidents if i.status == "pending")
     total_upvotes = sum(i.upvotes for i in incidents)
+
+    # Explicit source counts — handles None and alias variants
+    source_counts = {
+        "seed_data": sum(1 for i in incidents if (i.source or '') == 'seed_data'),
+        "newsapi": sum(1 for i in incidents if (i.source or '') in ('newsapi', 'news_api', 'gnews')),
+        "gnews": sum(1 for i in incidents if (i.source or '') == 'gnews'),
+        "sos": sum(1 for i in incidents if (i.source or '') == 'sos' or i.incident_type == 'sos_emergency'),
+        "user_report": sum(1 for i in incidents if (i.source or '') in ('user_report', '', None) and i.incident_type != 'sos_emergency'),
+    }
+    zone_counts = {
+        "red": sum(1 for i in incidents if i.zone == 'red'),
+        "yellow": sum(1 for i in incidents if i.zone == 'yellow'),
+        "green": sum(1 for i in incidents if i.zone == 'green'),
+    }
     
     return {
         "total_incidents": total,
@@ -26,7 +40,9 @@ async def get_stats(db: AsyncSession = Depends(get_db)):
         "verified_incidents": verified,
         "pending_incidents": pending,
         "total_upvotes": total_upvotes,
-        "categories_count": len(set(i.incident_type for i in incidents))
+        "categories_count": len(set(i.incident_type for i in incidents)),
+        "source_counts": source_counts,
+        "zone_counts": zone_counts
     }
 
 @router.get("/trends")
@@ -77,4 +93,4 @@ async def get_heatmap_zones(db: AsyncSession = Depends(get_db)):
     } for inc in incidents]
     
     hotspots = detect_hotspots(incident_dicts)
-    return hotspots[:5]  # Top 5
+    return hotspots[:15]  # Show top 15 instead of 5

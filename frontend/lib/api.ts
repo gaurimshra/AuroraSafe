@@ -18,3 +18,22 @@ export const getDashboardStats = () => api.get('/dashboard/stats').then(r => r.d
 export const getDashboardTrends = () => api.get('/dashboard/trends').then(r => r.data)
 export const getDashboardCategories = () => api.get('/dashboard/categories').then(r => r.data)
 export const triggerSOS = (data: any) => api.post('/sos/trigger', data).then(r => r.data)
+export const getSOSHistory = (user_id?: string) => 
+  api.get('/sos/history', { params: { user_id } }).then(r => r.data)
+export const getSOSContacts = (user_id: string) => api.get(`/sos/contacts/${user_id}`).then(r => r.data)
+export const addSOSContact = (data: any) => api.post('/sos/contacts', data).then(r => r.data)
+export const deleteSOSContact = (id: string) => api.delete(`/sos/contacts/${id}`).then(r => r.data)
+
+export const getSavedRoutes = (user_id: string) => api.get(`/saved-routes/${user_id}`).then(r => r.data)
+export const addSavedRoute = (data: any) => api.post('/saved-routes/', data).then(r => r.data)
+export const deleteSavedRoute = (id: string) => api.delete(`/saved-routes/${id}`).then(r => r.data)
+
+// Live Data Sources
+export const getLiveFactors = (lat: number, lng: number, city?: string) => 
+  api.get('/data-sources/live-factors', { params: { lat, lng, city } }).then(r => r.data)
+export const getWeather = (city?: string) => 
+  api.get('/data-sources/weather', { params: { city } }).then(r => r.data)
+export const getAllWeather = () => api.get('/data-sources/weather/all').then(r => r.data)
+export const getTriggerNews = () => api.post('/data-sources/trigger/news').then(r => r.data)
+export const getDataSourceStatus = () => api.get('/data-sources/status').then(r => r.data)
+export const getPoliceStations = () => api.get('/data-sources/police-stations').then(r => r.data)

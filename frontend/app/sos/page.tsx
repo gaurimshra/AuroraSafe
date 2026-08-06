@@ -1,10 +1,12 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Phone, Users, ShieldAlert, ShieldCheck, MapPin, X, Plus, Loader2, AlertTriangle } from 'lucide-react'
-import { triggerSOS } from '@/lib/api'
+import { Phone, Users, ShieldAlert, ShieldCheck, MapPin, X, Plus, Loader2, AlertTriangle, Lock } from 'lucide-react'
+import { triggerSOS, getSOSHistory, getSOSContacts, addSOSContact, deleteSOSContact } from '@/lib/api'
+import { useUser, SignInButton } from '@clerk/nextjs'
 
 interface Contact {
+  id?: string
   name: string
   phone: string
   email?: string
@@ -20,6 +22,7 @@ const EMERGENCY_NUMBERS = [
 ]
 
 export default function SOSPage() {
+  const { user } = useUser()
   const [sosActive, setSosActive] = useState(false)
   const [countdown, setCountdown] = useState(5)
   const [location, setLocation] = useState('Fetching location...')
@@ -27,21 +30,137 @@ export default function SOSPage() {
   const [contacts, setContacts] = useState<Contact[]>([])
   const [showAddContact, setShowAddContact] = useState(false)
   const [newContact, setNewContact] = useState<Contact>({ name: '', phone: '', email: '' })
-  const [sosError, setSosError] = useState('')
   const [sosSent, setSosSent] = useState(false)
+  const [waLinks, setWaLinks] = useState<string[]>([])
+  const [history, setHistory] = useState<any[]>([])
+  const [stealthMode, setStealthMode] = useState(false)
+  const [shakeEnabled, setShakeEnabled] = useState(false)
+  const [shakeHint, setShakeHint] = useState('')
+  
+  // Walk With Me
+  const [walkActive, setWalkActive] = useState(false)
+  const [walkETA, setWalkETA] = useState<number | null>(null)
+  const [walkMinsRemaining, setWalkMinsRemaining] = useState(0)
 
-  // Load contacts from localStorage
+  const loadHistory = async () => {
+    try {
+      const h = await getSOSHistory(user?.id)
+      setHistory(h)
+    } catch {}
+  }
+
+  useEffect(() => { loadHistory() }, [user])
+
+  // Shake-to-SOS via DeviceMotion
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY)
-    if (saved) {
-      try { setContacts(JSON.parse(saved)) } catch {}
+    if (!shakeEnabled) return
+    let shakes = 0
+    let lastShake = 0
+    const handleMotion = (e: DeviceMotionEvent) => {
+      const acc = e.accelerationIncludingGravity
+      if (!acc) return
+      const total = Math.abs(acc.x || 0) + Math.abs(acc.y || 0) + Math.abs(acc.z || 0)
+      if (total > 35) {
+        const now = Date.now()
+        if (now - lastShake < 600) shakes++
+        else shakes = 1
+        lastShake = now
+        setShakeHint(`Shake ${shakes}/3 detected!`)
+        if (shakes >= 3 && !sosActive) {
+          triggerSOSAlert()
+          shakes = 0
+          setShakeHint('')
+        }
+      }
     }
-  }, [])
+    window.addEventListener('devicemotion', handleMotion)
+    return () => window.removeEventListener('devicemotion', handleMotion)
+  }, [shakeEnabled, sosActive])
 
-  // Save contacts to localStorage
-  const saveContacts = (updated: Contact[]) => {
-    setContacts(updated)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
+  // Walk with me track
+  useEffect(() => {
+    if (!walkActive) return
+    let lastLat = 0, lastLng = 0
+    let lastMoveTime = Date.now()
+    
+    // Auto idle check every 10 sec
+    const interval = setInterval(() => {
+      const msIdle = Date.now() - lastMoveTime
+      if (msIdle > 3 * 60 * 1000) {
+        // Idle for 3 minutes
+        triggerSOSAlert()
+        setWalkActive(false)
+      }
+    }, 10000)
+
+    const watchId = navigator.geolocation.watchPosition(
+      p => {
+        const dLat = Math.abs(p.coords.latitude - lastLat)
+        const dLng = Math.abs(p.coords.longitude - lastLng)
+        // If moved roughly > 15m
+        if (dLat > 0.0001 || dLng > 0.0001) {
+          lastMoveTime = Date.now()
+          lastLat = p.coords.latitude
+          lastLng = p.coords.longitude
+        }
+      },
+      e => console.error(e),
+      { enableHighAccuracy: true }
+    )
+
+    return () => {
+      clearInterval(interval)
+      navigator.geolocation.clearWatch(watchId)
+    }
+  }, [walkActive])
+
+  // Load contacts from Backend or localStorage
+  useEffect(() => {
+    if (user?.id) {
+      getSOSContacts(user.id).then(c => setContacts(c)).catch(() => {})
+    } else {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        try { setContacts(JSON.parse(saved)) } catch {}
+      }
+    }
+  }, [user])
+
+  // Save contacts
+  const saveContacts = async (updated: Contact[]) => {
+    // If not logged in, just use local storage
+    if (!user) {
+      setContacts(updated)
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
+      return
+    }
+    // (Actual backend saving logic is handled directly in the UI handlers below now for adding/deleting)
+  }
+
+  const handleAddContact = async () => {
+    if (newContact.name && newContact.phone) {
+      if (user) {
+        const c = await addSOSContact({ user_id: user.id, name: newContact.name, phone: newContact.phone, email: newContact.email })
+        setContacts([...contacts, c])
+      } else {
+        const updated = [...contacts, newContact]
+        setContacts(updated)
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
+      }
+      setNewContact({ name: '', phone: '', email: '' })
+      setShowAddContact(false)
+    }
+  }
+
+  const handleRemoveContact = async (idx: number, id?: string) => {
+    if (user && id) {
+      await deleteSOSContact(id)
+      setContacts(contacts.filter(c => c.id !== id))
+    } else {
+      const updated = contacts.filter((_, i) => i !== idx)
+      setContacts(updated)
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
+    }
   }
 
   // Get geolocation
@@ -72,16 +191,21 @@ export default function SOSPage() {
   const triggerSOSAlert = async () => {
     setSosActive(true)
     setCountdown(5)
-    setSosError('')
     setSosSent(false)
     try {
-      await triggerSOS({
+      const res = await triggerSOS({
         latitude: coords?.lat,
         longitude: coords?.lng,
         location_text: location,
-        contacts: contacts.map(c => ({ name: c.name, phone: c.phone, email: c.email }))
+        contacts: contacts.map(c => ({ name: c.name, phone: c.phone, email: c.email })),
+        user_id: user?.id
       })
       setSosSent(true)
+      if (res?.wa_links && res.wa_links.length > 0) {
+        setWaLinks(res.wa_links)
+        window.open(res.wa_links[0], '_blank')
+      }
+      loadHistory()
     } catch (err) {
       // SOS triggered locally even if API fails
       setSosSent(true) // still show success — contacts shown on screen
@@ -108,6 +232,43 @@ export default function SOSPage() {
 
   return (
     <div className="min-h-screen pt-16 flex flex-col">
+      {/* Stealth Mode Overlay */}
+      {stealthMode && (
+        <div className="fixed inset-0 z-[9999] bg-sky-100 flex flex-col items-center justify-center">
+          <div className="text-center">
+            <div className="text-6xl mb-4">🌤️</div>
+            <h1 className="text-3xl font-bold text-sky-800">Delhi Weather</h1>
+            <p className="text-sky-600 text-xl mt-2">26°C · Partly Cloudy</p>
+            <p className="text-sky-500 text-sm mt-4">Humidity: 68% · Wind: 12 km/h NW</p>
+            <div className="mt-8 grid grid-cols-3 gap-4 text-center">
+              {['Mon', 'Tue', 'Wed'].map((d, i) => (
+                <div key={d} className="bg-white/50 rounded-xl p-3">
+                  <div className="text-sky-700 text-sm font-medium">{d}</div>
+                  <div className="text-2xl my-1">{['⛅', '🌧', '☀️'][i]}</div>
+                  <div className="text-sky-600 text-sm">{[24, 22, 28][i]}°</div>
+                </div>
+              ))}
+            </div>
+            {/* Hidden SOS: long-press this area */}
+            <button
+              onMouseDown={() => {
+                const t = setTimeout(() => { setStealthMode(false); triggerSOSAlert() }, 3000)
+                const up = () => clearTimeout(t)
+                document.addEventListener('mouseup', up, { once: true })
+                document.addEventListener('touchend', up, { once: true })
+              }}
+              className="mt-10 bg-white/30 text-sky-400 rounded-xl px-6 py-3 text-sm"
+            >
+              View 7-day forecast →
+            </button>
+            <p className="text-sky-300 text-xs mt-3">Hold for 3 seconds to call for help</p>
+            <button onClick={() => setStealthMode(false)} className="mt-4 text-sky-300 text-xs underline">
+              Exit Forecast
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Warning Banner */}
       <div className="w-full bg-danger/20 border-b border-danger/30 text-danger py-3 text-center font-bold uppercase tracking-widest text-xs animate-pulse">
         ⚠ In immediate danger? Tap SOS to alert your contacts
@@ -137,6 +298,69 @@ export default function SOSPage() {
                 <p className="text-text-secondary text-sm text-center max-w-xs">
                   Sends your live location to your trusted contacts and logs an emergency incident
                 </p>
+
+                {/* Shake + Stealth controls */}
+                <div className="flex gap-3">
+                  <button
+                    onClick={async () => {
+                      if (typeof DeviceMotionEvent !== 'undefined' && typeof (DeviceMotionEvent as any).requestPermission === 'function') {
+                        const perm = await (DeviceMotionEvent as any).requestPermission()
+                        if (perm === 'granted') setShakeEnabled(true)
+                      } else {
+                        setShakeEnabled(e => !e)
+                      }
+                    }}
+                    className={`flex-1 text-xs py-2.5 px-3 rounded-xl border font-medium transition-all ${
+                      shakeEnabled 
+                        ? 'bg-primary/20 border-primary text-primary' 
+                        : 'bg-surface border-border text-text-secondary hover:border-primary'
+                    }`}
+                  >
+                    📳 {shakeEnabled ? `Shake Active ${shakeHint ? `(${shakeHint})` : ''}` : 'Enable Shake SOS'}
+                  </button>
+                  <button
+                    onClick={() => setStealthMode(true)}
+                    className="flex-1 text-xs py-2.5 px-3 rounded-xl border border-border bg-surface text-text-secondary hover:border-warning hover:text-warning font-medium transition-all"
+                  >
+                    🎭 Stealth Mode
+                  </button>
+                </div>
+
+                {/* Walk With Me */}
+                <div className="glass-card p-4 w-full max-w-sm border-primary/30">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-xs font-bold text-primary uppercase tracking-wider">🚶‍♀️ Walk With Me</h4>
+                    <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded text-center">AUTO-SOS</span>
+                  </div>
+                  <p className="text-xs text-text-secondary mb-3 leading-relaxed">
+                    App tracks your location. If you stop moving for 3 minutes, it automatically triggers an SOS to your trusted contacts.
+                  </p>
+                  {!walkActive ? (
+                    <button
+                      onClick={() => {
+                        setWalkActive(true)
+                        setWalkETA(Date.now())
+                        setWalkMinsRemaining(15) // mock 15 mins
+                      }}
+                      className="w-full bg-surface border border-primary/50 text-primary text-xs py-2.5 rounded-xl font-bold hover:bg-primary/10 transition-colors"
+                    >
+                      Start Walking Session
+                    </button>
+                  ) : (
+                    <div className="bg-primary/10 border border-primary/30 rounded-xl p-3 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+                        <span className="text-xs font-medium text-white">Tracking active</span>
+                      </div>
+                      <button
+                        onClick={() => setWalkActive(false)}
+                        className="text-xs text-primary font-bold hover:underline"
+                      >
+                        End Trip
+                      </button>
+                    </div>
+                  )}
+                </div>
 
                 {/* Emergency numbers */}
                 <div className="glass-card p-4 w-full max-w-sm">
@@ -178,10 +402,16 @@ export default function SOSPage() {
                   <div className="w-full mb-6 space-y-2">
                     <p className="text-xs text-text-secondary font-medium">Contacts notified:</p>
                     {contacts.map((c, i) => (
-                      <div key={i} className="flex items-center space-x-2 bg-surface/30 rounded-lg px-3 py-2">
-                        <div className="w-7 h-7 rounded-full bg-danger/30 flex items-center justify-center font-bold text-danger text-sm">{c.name[0]}</div>
-                        <div className="text-sm text-white">{c.name}</div>
-                        <div className="text-xs text-text-secondary ml-auto">{c.phone}</div>
+                      <div key={i} className="flex items-center space-x-2 bg-surface/30 rounded-lg px-3 py-2 text-left">
+                        <div className="w-7 h-7 rounded-full bg-danger/30 flex items-center justify-center font-bold text-danger text-sm shrink-0">{c.name[0]}</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm text-white truncate">{c.name}</div>
+                          <div className="text-xs text-text-secondary">{c.phone}</div>
+                        </div>
+                        <div className="flex space-x-1 shrink-0">
+                          <a href={`tel:${c.phone}`} className="p-2 bg-surface rounded-full text-white hover:bg-primary transition"><Phone className="w-3 h-3" /></a>
+                          {waLinks[i] && <a href={waLinks[i]} target="_blank" rel="noreferrer" className="p-2 bg-surface rounded-full text-[#25D366] hover:bg-primary/20 transition"><ShieldAlert className="w-3 h-3" /></a>}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -282,6 +512,27 @@ export default function SOSPage() {
                     <button onClick={() => removeContact(i)} className="text-text-muted hover:text-danger transition-colors p-1">
                       <X className="w-4 h-4" />
                     </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* SOS History */}
+          <div className="glass-card p-5">
+            <h3 className="text-sm font-bold mb-3 text-text">Past SOS Events</h3>
+            {history.length === 0 ? (
+              <p className="text-xs text-text-secondary">No past SOS events logged.</p>
+            ) : (
+              <div className="space-y-2">
+                {history.map((h, i) => (
+                  <div key={i} className="bg-surface border border-border rounded-lg p-2.5 text-xs">
+                    <div className="font-bold text-white mb-1 flex justify-between">
+                      <span>{new Date(h.created_at).toLocaleString()}</span>
+                      <span className="text-danger">SOS</span>
+                    </div>
+                    <div className="text-text-secondary truncate pr-4">📍 {h.location_text || 'Unknown location'}</div>
+                    <div className="text-text-secondary mt-1">👥 {h.contact_count} contacts notified</div>
                   </div>
                 ))}
               </div>

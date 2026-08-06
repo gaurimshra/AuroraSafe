@@ -3,10 +3,12 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ShieldCheck, Menu, X } from 'lucide-react'
 import { useState } from 'react'
+import { SignInButton, UserButton, useUser } from '@clerk/nextjs'
 
 export default function Navbar() {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
+  const { user, isLoaded, isSignedIn } = useUser()
 
   const links = [
     { href: '/', label: 'Home' },
@@ -14,6 +16,7 @@ export default function Navbar() {
     { href: '/report', label: 'Report' },
     { href: '/dashboard', label: 'Dashboard' },
     { href: '/sos', label: 'SOS' },
+    { href: '/community', label: 'Community' },
   ]
 
   return (
@@ -27,9 +30,15 @@ export default function Navbar() {
                 Aurora<span className="gradient-text">Safe</span>
               </span>
             </Link>
+            {/* Live pulse indicator */}
+            <div className="ml-3 hidden sm:flex items-center gap-1.5 bg-safe/10 border border-safe/30 rounded-full px-2.5 py-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-safe animate-pulse" />
+              <span className="text-[10px] text-safe font-medium uppercase tracking-wider">Live</span>
+            </div>
           </div>
+
           <div className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-4">
+            <div className="ml-10 flex items-baseline space-x-1">
               {links.map(link => (
                 <Link
                   key={link.href}
@@ -40,25 +49,65 @@ export default function Navbar() {
                       : 'text-text-secondary hover:text-white hover:bg-card'
                   }`}
                 >
-                  {link.label}
+                  {link.href === '/community' ? (
+                    <span className="flex items-center gap-1">
+                      {link.label}
+                      <span className="text-[9px] bg-primary/30 text-primary px-1.5 py-0.5 rounded-full font-bold">NEW</span>
+                    </span>
+                  ) : link.label}
                 </Link>
               ))}
             </div>
           </div>
-          <div className="hidden md:flex items-center space-x-4">
+
+          <div className="hidden md:flex items-center space-x-3">
             <Link
               href="/sos"
               className="sos-pulse bg-danger text-white px-4 py-2 rounded-full font-bold text-sm hover:bg-danger-light transition-colors"
             >
-              SOS
+              🆘 SOS
             </Link>
+            
+            {/* Clerk Auth */}
+            {/* Clerk Auth */}
+            {!isSignedIn && (
+              <SignInButton mode="modal">
+                <button className="bg-gradient-to-r from-primary to-accent text-white px-4 py-2 rounded-lg font-medium text-sm hover:opacity-90 transition-opacity">
+                  Sign In
+                </button>
+              </SignInButton>
+            )}
+            {isSignedIn && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-text-secondary hidden lg:block">
+                  {user?.firstName || user?.emailAddresses[0]?.emailAddress?.split('@')[0]}
+                </span>
+                <UserButton 
+                  appearance={{
+                    elements: {
+                      avatarBox: "w-8 h-8",
+                    }
+                  }}
+                >
+                  <UserButton.MenuItems>
+                    <UserButton.Link
+                      label="Profile Dashboard"
+                      labelIcon={<span className="text-sm">🛡️</span>}
+                      href="/profile"
+                    />
+                  </UserButton.MenuItems>
+                </UserButton>
+              </div>
+            )}
+
             <Link
               href="/report"
-              className="bg-gradient-to-r from-primary to-accent text-white px-4 py-2 rounded-lg font-medium text-sm hover:opacity-90 transition-opacity"
+              className="bg-surface border border-primary/50 text-primary px-4 py-2 rounded-lg font-medium text-sm hover:bg-primary/10 transition-all"
             >
-              Report Incident
+              Report
             </Link>
           </div>
+
           <div className="-mr-2 flex md:hidden">
             <button
               onClick={() => setIsOpen(!isOpen)}
@@ -93,15 +142,21 @@ export default function Navbar() {
                 onClick={() => setIsOpen(false)}
                 className="block w-full text-center sos-pulse bg-danger text-white px-4 py-2 rounded-full font-bold text-sm"
               >
-                SOS
+                🆘 SOS
               </Link>
-              <Link
-                href="/report"
-                onClick={() => setIsOpen(false)}
-                className="block w-full text-center bg-gradient-to-r from-primary to-accent text-white px-4 py-2 rounded-lg font-medium text-sm"
-              >
-                Report Incident
-              </Link>
+              {!isSignedIn && (
+                <SignInButton mode="modal">
+                  <button className="block w-full text-center bg-gradient-to-r from-primary to-accent text-white px-4 py-2 rounded-lg font-medium text-sm">
+                    Sign In to Report
+                  </button>
+                </SignInButton>
+              )}
+              {isSignedIn && (
+                <div className="flex items-center justify-center gap-3 py-2">
+                  <span className="text-sm text-text-secondary">{user?.firstName}</span>
+                  <UserButton />
+                </div>
+              )}
             </div>
           </div>
         </div>

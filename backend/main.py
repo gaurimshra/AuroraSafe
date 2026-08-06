@@ -6,7 +6,7 @@ import logging
 from config import settings
 from database import init_db, AsyncSessionLocal
 from routers import auth, incidents, safety, routes, sos, dashboard
-from routers import data_sources
+from routers import data_sources, saved_routes
 from ml.risk_model import load_model
 
 logging.basicConfig(level=logging.INFO)
@@ -90,6 +90,7 @@ app.include_router(routes.router,       prefix="/routes",       tags=["routes"])
 app.include_router(sos.router,          prefix="/sos",          tags=["sos"])
 app.include_router(dashboard.router,    prefix="/dashboard",    tags=["dashboard"])
 app.include_router(data_sources.router, prefix="/data-sources", tags=["data-sources"])
+app.include_router(saved_routes.router, prefix="/saved-routes", tags=["saved-routes"])
 
 
 @app.get("/")

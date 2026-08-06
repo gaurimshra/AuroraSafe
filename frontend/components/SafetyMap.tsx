@@ -10,6 +10,9 @@ interface Incident {
   severity?: number
   summary?: string
   zone?: string
+  source?: string
+  created_at?: string
+  news_url?: string
 }
 
 interface Hotspot {
@@ -21,10 +24,19 @@ interface Hotspot {
   type?: string
 }
 
+interface SafeHaven {
+  name: string
+  lat: number
+  lng: number
+  phone?: string
+  ref?: string
+}
+
 interface MapProps {
   incidents?: Incident[]
   heatmapPoints?: [number, number, number][]
   hotspots?: Hotspot[]
+  safeHavens?: SafeHaven[]
   route?: { lat: number; lng: number }[] | null
   onMapClick?: (e: any) => void
   center?: [number, number]
@@ -86,6 +98,7 @@ export default function SafetyMap({
   incidents = [],
   heatmapPoints = [],
   hotspots = [],
+  safeHavens = [],
   route = null,
   onMapClick,
   center = [12.9716, 77.5946],
@@ -128,6 +141,33 @@ export default function SafetyMap({
       {/* Heatmap layer */}
       {heatmapPoints.length > 0 && <HeatmapLayer points={heatmapPoints} />}
 
+      {/* Safe Havens Layer */}
+      {safeHavens && safeHavens.map((sh, idx) => (
+        <CircleMarker
+          key={`haven-${idx}`}
+          center={[sh.lat, sh.lng]}
+          radius={8}
+          color="#3b82f6" /* blue border */
+          fillColor="#60a5fa"
+          fillOpacity={0.8}
+          weight={2}
+        >
+          <Popup className="custom-popup min-w-[200px]">
+            <div className="p-3">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xl">👮‍♂️</span>
+                <h4 className="font-bold text-gray-800 dark:text-white capitalize leading-tight">
+                  {sh.name}
+                </h4>
+              </div>
+              <div className="flex flex-col gap-1 text-xs text-gray-600 dark:text-gray-300">
+                {sh.phone && <div>📞 {sh.phone}</div>}
+              </div>
+            </div>
+          </Popup>
+        </CircleMarker>
+      ))}
+
       {/* Hotspot circles */}
       {hotspots.map((h, i) => {
         const c = zoneColor(h.level)
@@ -152,6 +192,14 @@ export default function SafetyMap({
       {/* Incident markers */}
       {incidents.map((inc, i) => {
         const c = zoneColor(inc.zone)
+        
+        let cred = { label: 'Community Report', stars: '★★★☆☆', icon: '👤' }
+        if (inc.source === 'newsapi' || inc.source === 'gnews') cred = { label: 'AI-Verified News', stars: '★★★★☆', icon: '📰' }
+        else if (inc.source === 'sos') cred = { label: 'Emergency Report', stars: '★★★★★', icon: '🆘' }
+        else if (inc.source === 'seed_data') cred = { label: 'Historical Data', stars: '★★☆☆☆', icon: '🕰️' }
+        
+        const timeStr = inc.created_at ? new Date(inc.created_at).toLocaleDateString() : 'Recent'
+
         return (
           <CircleMarker
             key={`incident-${i}`}
@@ -159,11 +207,42 @@ export default function SafetyMap({
             radius={inc.severity ? Math.max(5, Math.min(12, inc.severity)) : 7}
             pathOptions={{ color: c.stroke, fillColor: c.fill, fillOpacity: 0.85, weight: 2 }}
           >
-            <Popup>
-              <div className="p-1 min-w-[160px]">
-                <div className="font-bold mb-1 capitalize">{inc.type?.replace('_', ' ') || 'Incident'}</div>
-                {inc.severity && <div className="text-sm text-gray-600 mb-1">Severity: {inc.severity}/10</div>}
-                {inc.summary && <div className="text-xs">{inc.summary}</div>}
+            <Popup className="incident-popup">
+              <div className="p-1 min-w-[220px]">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <div className="font-bold capitalize text-sm" style={{ color: c.stroke }}>
+                    {inc.zone === 'red' ? '⚠️' : '⚡'} {inc.type?.replace('_', ' ') || 'Incident'}
+                  </div>
+                  <div className="text-xs" style={{ background: c.fill, color: '#fff', padding: '2px 6px', borderRadius: 4, fontWeight: 'bold' }}>
+                    {inc.zone?.toUpperCase()} ZONE
+                  </div>
+                </div>
+                
+                <div className="text-sm mb-2" style={{ fontStyle: 'italic', color: '#333' }}>
+                  "{inc.summary}"
+                </div>
+                
+                <div className="text-xs text-gray-600 mb-2 border-l-2 pl-2" style={{ borderColor: c.stroke }}>
+                  <div>📍 <b>Location:</b> {inc.lat.toFixed(4)}, {inc.lng.toFixed(4)}</div>
+                  <div>🕐 <b>Reported:</b> {timeStr}</div>
+                  {inc.severity && <div>🚨 <b>Severity:</b> {inc.severity}/10</div>}
+                </div>
+                
+                <div style={{ background: '#f8fafc', padding: '6px', borderRadius: '4px', fontSize: '11px', marginTop: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+                    <span style={{ fontWeight: 'bold', color: '#475569' }}>{cred.icon} Source:</span>
+                    <span>{inc.source || 'user_report'}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ fontWeight: 'bold', color: '#475569' }}>Credibility:</span>
+                    <span style={{ color: '#059669', letterSpacing: '1px' }} title={cred.label}>{cred.stars}</span>
+                  </div>
+                  {inc.news_url && (
+                    <div style={{ marginTop: 4, textAlign: 'right' }}>
+                      <a href={inc.news_url} target="_blank" rel="noreferrer" style={{ color: '#2563eb', textDecoration: 'underline' }}>Read Article →</a>
+                    </div>
+                  )}
+                </div>
               </div>
             </Popup>
           </CircleMarker>

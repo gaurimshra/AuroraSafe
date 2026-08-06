@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import { Loader2 } from 'lucide-react'
 import RiskBadge from '@/components/RiskBadge'
-import { getHeatmap, getIncidents, getZones, getRiskScore, getSafeRoute, getNearbyAlerts } from '@/lib/api'
+import { getHeatmap, getIncidents, getZones, getRiskScore, getSafeRoute, getNearbyAlerts, getWeather, getDataSourceStatus, getTriggerNews, getLiveFactors, getPoliceStations } from '@/lib/api'
 import { geocodeAddress } from '@/lib/geocode'
 
 const SafetyMap = dynamic(() => import('@/components/SafetyMap'), {
@@ -19,7 +19,7 @@ const SafetyMap = dynamic(() => import('@/components/SafetyMap'), {
   )
 })
 
-type Tab = 'check' | 'route' | 'alerts'
+type Tab = 'check' | 'route' | 'alerts' | 'feed'
 
 export default function MapPage() {
   const [tab, setTab] = useState<Tab>('check')
@@ -28,7 +28,7 @@ export default function MapPage() {
   const [hotspots, setHotspots] = useState<any[]>([])
   const [route, setRoute] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [mapCenter, setMapCenter] = useState<[number, number]>([12.9716, 77.5946])
+  const [mapCenter, setMapCenter] = useState<[number, number]>([28.6139, 77.2090])
 
   // Risk check
   const [riskAddr, setRiskAddr] = useState('')
@@ -52,12 +52,34 @@ export default function MapPage() {
   // Filter
   const [filter, setFilter] = useState<'all' | 'green' | 'yellow' | 'red'>('all')
 
+  // Live Data
+  const [weather, setWeather] = useState<any>(null)
+  const [feedStats, setFeedStats] = useState<any>(null)
+  const [feedLoading, setFeedLoading] = useState(false)
+  const [liveFactors, setLiveFactors] = useState<any>(null)
+  
+  // Safe Havens
+  const [safeHavensLayer, setSafeHavensLayer] = useState(false)
+  const [safeHavens, setSafeHavens] = useState<any[]>([])
+
   const fetchMapData = useCallback(async () => {
     try {
-      const [heat, inc, zones] = await Promise.all([getHeatmap(), getIncidents({ limit: 200 }), getZones()])
+      const [heat, inc, zones, w, stats] = await Promise.all([
+        getHeatmap().catch(() => []), 
+        getIncidents({ limit: 200 }).catch(() => []), 
+        getZones().catch(() => []),
+        getWeather('Delhi').catch(() => null),
+        getDataSourceStatus().catch(() => null)
+      ])
       setHeatmapPoints(heat.map((p: any) => [p.lat, p.lng, p.weight] as [number, number, number]))
-      setIncidents(inc.map((i: any) => ({ lat: i.latitude, lng: i.longitude, type: i.incident_type, severity: i.severity, summary: i.ai_summary || i.description, zone: i.zone })))
+      setIncidents(inc.map((i: any) => ({ 
+        lat: i.latitude, lng: i.longitude, type: i.incident_type, 
+        severity: i.severity, summary: i.ai_summary || i.description, 
+        zone: i.zone, source: i.source, created_at: i.created_at, news_url: i.news_url 
+      })))
       setHotspots(zones.map((z: any) => ({ lat: z.lat, lng: z.lng, radius: z.radius * 1000, level: z.risk_level, count: z.incident_count, type: z.dominant_type })))
+      if (w) setWeather(w)
+      if (stats) setFeedStats(stats)
     } catch { } finally { setLoading(false) }
   }, [])
 
@@ -68,7 +90,7 @@ export default function MapPage() {
   }
 
   const handleRisk = async () => {
-    setRiskErr(''); setRiskResult(null); setRiskLoading(true)
+    setRiskErr(''); setRiskResult(null); setRiskLoading(true); setLiveFactors(null)
     try {
       let lat = parseFloat(riskLat), lng = parseFloat(riskLng)
       if (riskAddr.trim()) {
@@ -77,8 +99,12 @@ export default function MapPage() {
         lat = g.lat; lng = g.lng; setRiskLat(lat.toFixed(6)); setRiskLng(lng.toFixed(6))
       } else if (isNaN(lat) || isNaN(lng)) { setRiskErr('Enter valid coordinates or address.'); setRiskLoading(false); return }
       setMapCenter([lat, lng])
-      const r = await getRiskScore(lat, lng)
+      const [r, factors] = await Promise.all([
+        getRiskScore(lat, lng),
+        getLiveFactors(lat, lng, 'Delhi').catch(() => null)
+      ])
       setRiskResult(r)
+      if (factors) setLiveFactors(factors)
     } catch { setRiskErr('Failed. Is backend running?') } finally { setRiskLoading(false) }
   }
 
@@ -96,7 +122,7 @@ export default function MapPage() {
   const loadAlerts = useCallback(async () => {
     setAlertsLoading(true)
     try {
-      const fallback = async () => { const d = await getNearbyAlerts(12.9716, 77.5946, 5); setAlerts(d); setAlertsLoading(false) }
+      const fallback = async () => { const d = await getNearbyAlerts(28.6139, 77.2090, 5); setAlerts(d); setAlertsLoading(false) }
       if (!navigator.geolocation) { await fallback(); return }
       navigator.geolocation.getCurrentPosition(async p => {
         const d = await getNearbyAlerts(p.coords.latitude, p.coords.longitude, 5)
@@ -119,6 +145,7 @@ export default function MapPage() {
     { key: 'check',  label: 'Risk Score', icon: '🔍' },
     { key: 'route',  label: 'Safe Route', icon: '🗺️' },
     { key: 'alerts', label: 'Alerts',     icon: '🔔' },
+    { key: 'feed',   label: 'Live Feed',  icon: '📡' },
   ]
 
   return (
@@ -179,6 +206,7 @@ export default function MapPage() {
             heatmapPoints={heatmapPoints}
             incidents={filteredIncidents}
             hotspots={hotspots}
+            safeHavens={safeHavensLayer ? safeHavens : []}
             route={route}
             center={mapCenter}
             zoom={13}
@@ -236,7 +264,7 @@ export default function MapPage() {
                   <input
                     value={riskAddr} onChange={e => { setRiskAddr(e.target.value); setRiskLat(''); setRiskLng('') }}
                     onKeyDown={e => e.key === 'Enter' && handleRisk()}
-                    placeholder="e.g. Koramangala, Bangalore"
+                    placeholder="e.g. Connaught Place, Delhi"
                     className="input-field"
                   />
                 </div>
@@ -246,11 +274,11 @@ export default function MapPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
                   <div>
                     <label className="label">Latitude</label>
-                    <input value={riskLat} onChange={e => { setRiskLat(e.target.value); setRiskAddr('') }} placeholder="12.9716" className="input-field" style={{ fontSize: 13 }} />
+                    <input value={riskLat} onChange={e => { setRiskLat(e.target.value); setRiskAddr('') }} placeholder="28.6139" className="input-field" style={{ fontSize: 13 }} />
                   </div>
                   <div>
                     <label className="label">Longitude</label>
-                    <input value={riskLng} onChange={e => { setRiskLng(e.target.value); setRiskAddr('') }} placeholder="77.5946" className="input-field" style={{ fontSize: 13 }} />
+                    <input value={riskLng} onChange={e => { setRiskLng(e.target.value); setRiskAddr('') }} placeholder="77.2090" className="input-field" style={{ fontSize: 13 }} />
                   </div>
                 </div>
                 <button
@@ -292,7 +320,29 @@ export default function MapPage() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--text-2)', marginBottom: 10 }}>
                     <span>Nearby incidents</span><span style={{ fontWeight: 600, color: 'var(--text)' }}>{riskResult.nearby_incidents}</span>
                   </div>
-                  <div style={{ background: 'var(--surface)', borderRadius: 'var(--r-sm)', padding: '10px 12px', fontSize: 12, color: 'var(--text-2)', lineHeight: 1.5 }}>
+
+                  {/* Explainable AI Breakdown */}
+                  {liveFactors && (
+                    <div style={{ marginTop: 12, borderTop: '1px solid var(--border)', paddingTop: 12 }}>
+                      <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-2)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Why this score?</p>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {[
+                          { icon: '📍', label: `${liveFactors.factors?.historical_incidents?.count_1km || 0} incidents within 1km`, color: 'var(--danger)' },
+                          { icon: '📰', label: `${liveFactors.factors?.recent_news?.count_24h || 0} reports in last 24h`, color: 'var(--warning)' },
+                          { icon: liveFactors.factors?.time_of_day?.period === 'late_night' ? '🌙' : '🌤', label: `${liveFactors.factors?.time_of_day?.period?.replace('_', ' ')} — ${(liveFactors.factors?.time_of_day?.safety_factor * 100).toFixed(0)}% time factor`, color: 'var(--primary)' },
+                          { icon: '🌦', label: `${liveFactors.factors?.weather?.condition} — ${(liveFactors.factors?.weather?.safety_factor * 100).toFixed(0)}% weather factor`, color: 'var(--accent)' },
+                          { icon: '👮', label: liveFactors.factors?.infrastructure?.police_nearby ? `Police station ${liveFactors.factors?.infrastructure?.nearest_police_m}m away` : 'No police station nearby', color: 'var(--safe)' },
+                        ].map((f, i) => (
+                          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--text-2)' }}>
+                            <span>{f.icon}</span>
+                            <span style={{ color: f.color, fontWeight: 500 }}>{f.label}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div style={{ background: 'var(--surface)', borderRadius: 'var(--r-sm)', padding: '10px 12px', fontSize: 12, color: 'var(--text-2)', lineHeight: 1.5, marginTop: 12 }}>
                     💡 {riskResult.message}
                   </div>
                 </div>
@@ -310,7 +360,7 @@ export default function MapPage() {
                 <div style={{ marginBottom: 10 }}>
                   <label className="label">🌿 Origin</label>
                   <div style={{ display: 'flex', gap: 6 }}>
-                    <input value={origin} onChange={e => setOrigin(e.target.value)} placeholder="e.g. MG Road, Bangalore" className="input-field" style={{ flex: 1 }} />
+                    <input value={origin} onChange={e => setOrigin(e.target.value)} placeholder="e.g. Karol Bagh, Delhi" className="input-field" style={{ flex: 1 }} />
                     <button
                       onClick={() => navigator.geolocation?.getCurrentPosition(p => setOrigin(`${p.coords.latitude.toFixed(4)}, ${p.coords.longitude.toFixed(4)}`))}
                       title="Use my location"
@@ -320,7 +370,7 @@ export default function MapPage() {
                 </div>
                 <div style={{ marginBottom: 12 }}>
                   <label className="label">🔮 Destination</label>
-                  <input value={dest} onChange={e => setDest(e.target.value)} placeholder="e.g. Indiranagar, Bangalore" className="input-field" />
+                  <input value={dest} onChange={e => setDest(e.target.value)} placeholder="e.g. Saket, Delhi" className="input-field" />
                 </div>
                 {routeErr && <p style={{ fontSize: 12, color: 'var(--danger)', marginBottom: 8 }}>⚠ {routeErr}</p>}
                 <button className="btn-primary" onClick={handleRoute} disabled={routeLoading || !origin || !dest} style={{ width: '100%', justifyContent: 'center' }}>
@@ -389,7 +439,92 @@ export default function MapPage() {
               ))}
             </div>
           )}
+
+          {/* ── Live Feed ── */}
+          {tab === 'feed' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <p style={{ fontSize: 12, color: 'var(--text-3)' }}>Real-Time Data Pipeline</p>
+                <button 
+                  onClick={async () => {
+                    setFeedLoading(true);
+                    await getTriggerNews().catch(()=>{});
+                    await fetchMapData();
+                    setFeedLoading(false);
+                  }}
+                  disabled={feedLoading}
+                  style={{ fontSize: 11, color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}
+                >
+                  {feedLoading ? '🔄 Syncing...' : '⚡ Force Sync'}
+                </button>
+              </div>
+
+              {!feedStats ? (
+                 <div className="card" style={{ padding: 24, textAlign: 'center' }}><p style={{ fontSize: 12, color: 'var(--text-3)' }}>Loading pipeline status...</p></div>
+              ) : (
+                <>
+                  <div className="card" style={{ padding: '14px 16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <span style={{ fontSize: 12, fontWeight: 600 }}>📡 AI News Fetcher</span>
+                      <span style={{ fontSize: 10, color: 'var(--safe)', background: 'var(--safe-subtle)', padding: '2px 6px', borderRadius: 10 }}>Active</span>
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--text-2)', marginBottom: 8 }}>
+                      Sources: NewsAPI, GNews<br/>
+                      Running on {feedStats.scheduler_running ? '5m strict interval' : 'Manual Overwrite'}
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                      <div style={{ background: 'var(--surface)', padding: 8, borderRadius: 6, textAlign: 'center' }}>
+                        <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--primary)' }}>
+                          {incidents.filter(i => ['newsapi', 'gnews', 'news_api'].includes(i.source)).length}
+                        </div>
+                        <div style={{ fontSize: 9, color: 'var(--text-3)' }}>NEWS INCIDENTS</div>
+                      </div>
+                      <div style={{ background: 'var(--surface)', padding: 8, borderRadius: 6, textAlign: 'center' }}>
+                        <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--accent)' }}>{feedStats.jobs?.news_fetch?.error_count === 0 ? 'Optimal' : feedStats.jobs?.news_fetch?.error_count + ' Errors' || 'OK'}</div>
+                        <div style={{ fontSize: 9, color: 'var(--text-3)' }}>PIPELINE HEALTH</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="card" style={{ padding: '14px 16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <span style={{ fontSize: 12, fontWeight: 600 }}>👥 Community Reports</span>
+                      <span style={{ fontSize: 10, color: 'var(--safe)', background: 'var(--safe-subtle)', padding: '2px 6px', borderRadius: 10 }}>Active</span>
+                    </div>
+                    <div style={{ background: 'var(--surface)', padding: 8, borderRadius: 6, textAlign: 'center', marginTop: 8 }}>
+                      <div style={{ fontSize: 16, fontWeight: 700, color: '#f59e0b' }}>
+                        {incidents.filter(i => i.source === 'user_report').length || 0}
+                      </div>
+                      <div style={{ fontSize: 9, color: 'var(--text-3)' }}>VERIFIED REPORTS</div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </div>
+
+        {/* Weather Strip */}
+        {weather && (
+          <div style={{ 
+            margin: '0 16px 14px', padding: '10px 14px', borderRadius: 'var(--r-md)', 
+            background: weather.safety_factor < 0.8 ? 'var(--danger-subtle)' : 'var(--safe-subtle)',
+            border: `1px solid ${weather.safety_factor < 0.8 ? 'var(--danger)' : 'var(--safe)'}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ fontSize: 18 }}>{weather.safety_factor < 0.8 ? '🌧' : '🌤'}</div>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text)' }}>
+                  {weather.city}: {weather.temp_celsius}°C {weather.condition}
+                </div>
+                <div style={{ fontSize: 10, color: weather.safety_factor < 0.8 ? 'var(--danger)' : 'var(--safe)', fontWeight: 600 }}>
+                  Safety Factor: {weather.safety_factor * 100}%
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Legend */}
         <div style={{ padding: '14px 16px', borderTop: '1px solid var(--border)', background: 'var(--surface)' }}>
@@ -402,7 +537,7 @@ export default function MapPage() {
             ))}
           </div>
         </div>
+        </div>
       </div>
-    </div>
   )
 }

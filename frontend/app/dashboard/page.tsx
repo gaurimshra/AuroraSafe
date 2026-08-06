@@ -7,7 +7,7 @@ import {
   ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Legend
 } from 'recharts'
 import RiskBadge from '@/components/RiskBadge'
-import { getDashboardStats, getDashboardTrends, getDashboardCategories, getZones } from '@/lib/api'
+import { getDashboardStats, getDashboardTrends, getDashboardCategories, getZones, getWeather } from '@/lib/api'
 
 const ZONE_COLORS: Record<string, string> = {
   theft: '#f59e0b',
@@ -26,6 +26,7 @@ export default function DashboardPage() {
   const [zones, setZones] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+  const [weather, setWeather] = useState<any>(null)
 
   const customTooltipStyle = {
     backgroundColor: '#111128',
@@ -36,13 +37,15 @@ export default function DashboardPage() {
 
   const loadData = async () => {
     try {
-      const [statsData, trendsData, catData, zonesData] = await Promise.all([
+      const [statsData, trendsData, catData, zonesData, wData] = await Promise.all([
         getDashboardStats(),
         getDashboardTrends(),
         getDashboardCategories(),
-        getZones()
+        getZones(),
+        getWeather('Delhi').catch(() => null)
       ])
       setStats(statsData)
+      if (wData) setWeather(wData)
       // Format trends for chart (last 14 days, with day names)
       const formattedTrends = trendsData.slice(-14).map((t: any) => ({
         name: new Date(t.date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }),
@@ -109,6 +112,53 @@ export default function DashboardPage() {
           >
             <RefreshCw className="w-4 h-4" />
           </button>
+        </div>
+      </div>
+
+      {/* Weather Strip */}
+      {weather && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-6 glass-card p-4 flex items-center justify-between" style={{ borderLeft: '4px solid var(--primary)' }}>
+          <div className="flex items-center gap-4">
+            <span className="text-3xl">{weather.safety_factor < 0.8 ? '🌧' : '🌤'}</span>
+            <div>
+              <div className="font-bold text-white text-lg">{weather.city}: {weather.temp_celsius}°C {weather.condition}</div>
+              <div className="text-sm text-text-secondary">Visibility: {(weather.visibility_m / 1000).toFixed(1)} km | Wind: {weather.wind_speed_mps} m/s</div>
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-sm text-text-secondary mb-1">Weather Safety Factor</div>
+            <div className={`font-bold text-xl ${weather.safety_factor < 0.8 ? 'text-danger' : 'text-safe'}`}>
+              {(weather.safety_factor * 100).toFixed(0)}%
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Data Source Breakdown */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="glass-card p-4 border border-border/50">
+          <div className="text-xs text-text-secondary mb-1">📰 AI-Verified News</div>
+          <div className="text-xl font-bold text-primary">
+            {(stats?.source_counts?.newsapi || 0) + (stats?.source_counts?.gnews || 0)}
+          </div>
+        </div>
+        <div className="glass-card p-4 border border-border/50">
+          <div className="text-xs text-text-secondary mb-1">🆘 Emergency Triggers</div>
+          <div className="text-xl font-bold text-danger">
+            {stats?.source_counts?.sos || 0}
+          </div>
+        </div>
+        <div className="glass-card p-4 border border-border/50">
+          <div className="text-xs text-text-secondary mb-1">👤 Community Reports</div>
+          <div className="text-xl font-bold text-warning">
+            {stats?.source_counts?.user_report || 0}
+          </div>
+        </div>
+        <div className="glass-card p-4 border border-border/50">
+          <div className="text-xs text-text-secondary mb-1">🕰️ Historical Data</div>
+          <div className="text-xl font-bold text-text-3">
+            {stats?.source_counts?.seed_data || 0}
+          </div>
         </div>
       </div>
 

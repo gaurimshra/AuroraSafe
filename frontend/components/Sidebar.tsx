@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { useTheme } from '@/lib/ThemeContext'
+import { SignInButton, UserButton, useUser } from '@clerk/nextjs'
 
 const NAV = [
   { href: '/',          icon: '🏠', label: 'Home' },
@@ -15,6 +16,7 @@ const NAV = [
 export default function Sidebar({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname()
   const { theme, toggle } = useTheme()
+  const { user, isSignedIn, isLoaded } = useUser()
 
   return (
     <aside className="sidebar" style={{ padding: '0' }}>
@@ -61,6 +63,42 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
               </Link>
             )
           })}
+        </div>
+
+        {/* Account Section */}
+        <div style={{ marginTop: '16px' }}>
+          <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '1px', padding: '4px 8px', marginBottom: '8px' }}>Account</div>
+          {!isSignedIn ? (
+            <SignInButton mode="modal">
+              <button
+                className="sidebar-link"
+                style={{ width: '100%', border: 'none', background: 'var(--primary-subtle)', color: 'var(--primary)', fontWeight: 600, justifyContent: 'center' }}
+              >
+                <span className="icon">🔒</span>
+                <span>Sign In / Register</span>
+              </button>
+            </SignInButton>
+          ) : (
+            <div style={{ padding: '0 8px' }}>
+              <div className="hover:border-primary transition-colors cursor-pointer" style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <UserButton 
+                  appearance={{
+                    elements: { avatarBox: "w-8 h-8" }
+                  }}
+                >
+                  <UserButton.MenuItems>
+                    <UserButton.Link label="Profile Dashboard" labelIcon={<span style={{fontSize:'12px'}}>🛡️</span>} href="/profile" />
+                  </UserButton.MenuItems>
+                </UserButton>
+                <Link href="/profile" onClick={onClose} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', textDecoration: 'none' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+                    {user?.firstName || 'My Profile'}
+                  </span>
+                  <span style={{ fontSize: '10px', color: 'var(--primary)', fontWeight: 700 }}>Open Dashboard →</span>
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
       </nav>
 

@@ -28,12 +28,15 @@ async def get_incidents(
     lng: Optional[float] = None,
     radius_km: Optional[float] = None,
     status: Optional[str] = None,
+    user_id: Optional[str] = None,
     limit: int = 100,
     db: AsyncSession = Depends(get_db)
 ):
     query = select(Incident).order_by(Incident.created_at.desc())
     if status:
         query = query.where(Incident.status == status)
+    if user_id:
+        query = query.where(Incident.reported_by == user_id)
     
     result = await db.execute(query)
     incidents = result.scalars().all()
