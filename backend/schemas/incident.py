@@ -24,6 +24,10 @@ class IncidentResponse(BaseModel):
     downvotes: int
     address: Optional[str]
     ai_summary: Optional[str]
+    # Data provenance — used by frontend for badges
+    source: str = "user_report"
+    news_url: Optional[str] = None
+    expires_at: Optional[datetime] = None
     created_at: datetime
     model_config = {"from_attributes": True}
 
