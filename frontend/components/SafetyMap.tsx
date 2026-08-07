@@ -236,7 +236,7 @@ export default function SafetyMap({
                 </div>
                 
                 <div className="text-sm mb-2" style={{ fontStyle: 'italic', color: '#333' }}>
-                  "{inc.summary}"
+                  &quot;{inc.summary}&quot;
                 </div>
                 
                 <div className="text-xs text-gray-600 mb-2 border-l-2 pl-2" style={{ borderColor: c.stroke }}>

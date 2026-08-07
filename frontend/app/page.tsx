@@ -119,7 +119,7 @@ export default function HomePage() {
               fontSize: 17, color: 'var(--text-2)', lineHeight: 1.7,
               maxWidth: 480, marginBottom: 36
             }}>
-              "Our system doesn't wait for an attack to happen. It predicts risk, guides users away from danger, and continuously learns from community intelligence."
+              &quot;Our system doesn&apos;t wait for an attack to happen. It predicts risk, guides users away from danger, and continuously learns from community intelligence.&quot;
             </p>
 
             {/* CTAs */}

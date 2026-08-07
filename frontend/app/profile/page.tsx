@@ -204,7 +204,7 @@ export default function ProfilePage() {
           {activeTab === 'history' && (
             <div className="animate-in fade-in slide-in-from-bottom-4">
               <h2 className="text-xl font-bold mb-6 flex items-center gap-2"><Clock className="text-danger"/> Emergency History</h2>
-              {history.length === 0 ? <p className="text-text-secondary">You haven't triggered any SOS alerts.</p> : (
+              {history.length === 0 ? <p className="text-text-secondary">You haven&apos;t triggered any SOS alerts.</p> : (
                 <div className="border-l-2 border-danger/20 ml-3 pl-6 space-y-6">
                   {history.map(h => (
                     <div key={h.id} className="relative">
@@ -226,7 +226,7 @@ export default function ProfilePage() {
             <div className="animate-in fade-in slide-in-from-bottom-4">
               <h2 className="text-xl font-bold mb-6 flex items-center gap-2"><AlertCircle className="text-warning"/> My Incident Reports</h2>
               <div className="grid gap-4">
-                {reports.length === 0 ? <p className="text-text-secondary">You haven't reported any incidents yet.</p> : reports.map(r => (
+                {reports.length === 0 ? <p className="text-text-secondary">You haven&apos;t reported any incidents yet.</p> : reports.map(r => (
                   <div key={r.id} className="p-4 bg-surface rounded-xl border border-border">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs font-bold uppercase text-warning bg-warning/10 px-2 py-0.5 rounded-full">{r.incident_type.replace('_', ' ')}</span>
