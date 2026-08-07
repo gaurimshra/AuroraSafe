@@ -190,7 +190,7 @@ export default function ReportPage() {
               <p className="text-text-secondary mt-2">Gemini AI has analyzed and classified your report.</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="bg-surface p-4 rounded-xl border border-border">
                 <div className="text-xs text-text-secondary mb-2">Incident Type</div>
                 <div className="font-bold text-primary capitalize">{result?.incident_type?.replace('_', ' ') || '—'}</div>
@@ -220,7 +220,7 @@ export default function ReportPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <button
                 onClick={() => window.location.href = '/map'}
                 className="w-full bg-gradient-to-r from-primary to-accent text-white py-3 rounded-xl font-bold text-sm hover:opacity-90"

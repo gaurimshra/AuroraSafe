@@ -159,9 +159,9 @@ export default function MapPage() {
   ]
 
   return (
-    <div style={{ display: 'flex', height: '100dvh', overflow: 'hidden' }}>
+    <div className="flex flex-col md:flex-row h-[100dvh] overflow-hidden pt-16 md:pt-0">
       {/* ── Map ── */}
-      <div style={{ flex: 1, position: 'relative', padding: 16, paddingBottom: 0 }}>
+      <div className="flex-1 relative p-2 md:p-4 pb-0 z-0 h-[50dvh] md:h-full min-h-[40dvh]">
         {/* Search + filter bar */}
         <div style={{
           position: 'absolute', top: 28, left: 28, right: 300, zIndex: 20,
@@ -224,7 +224,7 @@ export default function MapPage() {
           />
         </div>
       </div>
-      <div style={{ width: 340, height: '100dvh', background: 'var(--sidebar-bg)', borderLeft: '1px solid var(--border)', display: 'flex', flexDirection: 'column', overflowY: 'auto', flexShrink: 0 }}>
+      <div className="w-full md:w-[340px] h-[50dvh] md:h-full flex flex-col shrink-0 overflow-y-auto z-10 relative bg-[var(--sidebar-bg)] border-t md:border-t-0 md:border-l border-[var(--border)] pb-10">
         {/* Header */}
         <div style={{ padding: '24px 20px 16px', borderBottom: '1px solid var(--border)' }}>
           <h2 style={{ fontFamily: 'var(--heading-font)', fontSize: 20, color: 'var(--text)', marginBottom: 4 }}>Safety Tools</h2>

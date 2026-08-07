@@ -72,14 +72,7 @@ export default function HomePage() {
       <Petals />
 
       {/* ── Hero Section ── */}
-      <section style={{
-        minHeight: '92vh',
-        display: 'flex',
-        alignItems: 'center',
-        padding: '40px 40px 40px 48px',
-        position: 'relative',
-        overflow: 'hidden',
-      }}>
+      <section className="min-h-[92vh] flex items-center p-6 md:p-10 lg:p-[40px_40px_40px_48px] relative overflow-hidden mt-16 md:mt-0">
         {/* Background gradient orbs */}
         <div style={{
           position: 'absolute', top: -100, right: -100,
@@ -94,9 +87,9 @@ export default function HomePage() {
           pointerEvents: 'none'
         }} />
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 60, width: '100%', maxWidth: 1100, position: 'relative', zIndex: 1 }}>
+        <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-[60px] w-full max-w-[1100px] relative z-10 w-full mt-10 md:mt-0">
           {/* Left: Text */}
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="flex-1 min-w-0 w-full">
             {/* Badge */}
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
@@ -191,9 +184,9 @@ export default function HomePage() {
       </section>
 
       {/* ── Stats Strip ── */}
-      <section style={{ padding: '0 40px 56px' }}>
+      <section className="px-6 md:px-10 pb-14">
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {STATS.map((s, i) => (
               <div key={i} className="stat-card fade-up" style={{ animationDelay: `${i * 0.1}s` }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
@@ -217,7 +210,7 @@ export default function HomePage() {
       </section>
 
       {/* ── Feature Cards ── */}
-      <section style={{ padding: '0 40px 80px' }}>
+      <section className="px-6 md:px-10 pb-20">
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 40 }}>
             <h2 style={{ fontFamily: 'var(--heading-font)', fontSize: 36, color: 'var(--text)', marginBottom: 12 }}>
@@ -227,7 +220,7 @@ export default function HomePage() {
               Every feature designed to make you feel protected, not afraid.
             </p>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 20 }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {FEATURES.map((f, i) => (
               <div key={i} className="card card-lift fade-up" style={{ padding: 28, animationDelay: `${i * 0.1}s` }}>
                 <div style={{
@@ -244,13 +237,12 @@ export default function HomePage() {
       </section>
 
       {/* ── CTA Banner ── */}
-      <section style={{ padding: '0 40px 80px' }}>
+      <section className="px-6 md:px-10 pb-20">
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-          <div style={{
-            borderRadius: 'var(--r-xl)', padding: '48px 56px',
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6" style={{
+            borderRadius: 'var(--r-xl)', padding: '48px 32px',
             background: 'linear-gradient(135deg, var(--primary-subtle) 0%, var(--accent-subtle) 100%)',
-            border: '1px solid var(--border)',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 24
+            border: '1px solid var(--border)'
           }}>
             <div>
               <h2 style={{ fontFamily: 'var(--heading-font)', fontSize: 32, color: 'var(--text)', marginBottom: 12 }}>
