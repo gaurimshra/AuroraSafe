@@ -121,11 +121,11 @@ export default function HomePage() {
               Protect.
             </h1>
 
-            <p style={{
+            <p className="font-semibold" style={{
               fontSize: 17, color: 'var(--text-2)', lineHeight: 1.7,
-              maxWidth: 420, marginBottom: 36
+              maxWidth: 480, marginBottom: 36
             }}>
-              AI-powered safety companion helping women travel with confidence and peace of mind. Because you deserve to feel safe everywhere.
+              "Our system doesn't wait for an attack to happen. It predicts risk, guides users away from danger, and continuously learns from community intelligence."
             </p>
 
             {/* CTAs */}

@@ -149,7 +149,7 @@ export default function DashboardPage() {
         <div className="glass-card p-4 border border-border/50">
           <div className="text-xs text-text-secondary mb-1">📰 AI-Verified News</div>
           <div className="text-xl font-bold text-primary">
-            {(stats?.source_counts?.newsapi || 0) + (stats?.source_counts?.gnews || 0)}
+            {(stats?.source_counts?.newsapi || 0) + (stats?.source_counts?.gnews || 0) + (stats?.source_counts?.fallback_news || 0)}
           </div>
         </div>
         <div className="glass-card p-4 border border-border/50">

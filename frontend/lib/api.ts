@@ -7,6 +7,7 @@ export const api = axios.create({ baseURL: API_BASE })
 export const getHeatmap = () => api.get('/safety/heatmap').then(r => r.data)
 export const getIncidents = (params?: any) => api.get('/incidents/', { params }).then(r => r.data)
 export const createIncident = (data: any) => api.post('/incidents/', data).then(r => r.data)
+export const voteIncident = (id: string, vote: 'up' | 'down') => api.put(`/incidents/${id}/vote`, { vote }).then(r => r.data)
 export const getRiskScore = (lat: number, lng: number) => 
   api.get('/safety/risk-score', { params: { lat, lng } }).then(r => r.data)
 export const getSafeRoute = (origin: {lat:number,lng:number}, destination: {lat:number,lng:number}) =>

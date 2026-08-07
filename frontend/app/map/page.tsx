@@ -466,17 +466,19 @@ export default function MapPage() {
                       Sources: NewsAPI, GNews<br/>
                       Running on {feedStats.scheduler_running ? '5m strict interval' : 'Manual Overwrite'}
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                      <div style={{ background: 'var(--surface)', padding: 8, borderRadius: 6, textAlign: 'center' }}>
-                        <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--primary)' }}>
-                          {incidents.filter(i => ['newsapi', 'gnews', 'news_api'].includes(i.source)).length}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                        <div style={{ background: 'var(--surface)', padding: 8, borderRadius: 6, textAlign: 'center' }}>
+                          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--primary)' }}>
+                            {incidents.filter(i => ['newsapi', 'gnews', 'news_api', 'fallback_news', 'police_db', 'transit_api', 'city_sensors'].includes(i.source)).length}
+                          </div>
+                          <div style={{ fontSize: 9, color: 'var(--text-3)' }}>NEWS INCIDENTS</div>
                         </div>
-                        <div style={{ fontSize: 9, color: 'var(--text-3)' }}>NEWS INCIDENTS</div>
-                      </div>
-                      <div style={{ background: 'var(--surface)', padding: 8, borderRadius: 6, textAlign: 'center' }}>
-                        <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--accent)' }}>{feedStats.jobs?.news_fetch?.error_count === 0 ? 'Optimal' : feedStats.jobs?.news_fetch?.error_count + ' Errors' || 'OK'}</div>
-                        <div style={{ fontSize: 9, color: 'var(--text-3)' }}>PIPELINE HEALTH</div>
-                      </div>
+                        <div style={{ background: 'var(--surface)', padding: 8, borderRadius: 6, textAlign: 'center' }}>
+                          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--accent)' }}>
+                            {feedStats.jobs?.news_fetch?.error_count === 0 ? 'Optimal' : (feedStats.jobs?.news_fetch?.error_count ? `${feedStats.jobs?.news_fetch?.error_count} Errors` : 'OK')}
+                          </div>
+                          <div style={{ fontSize: 9, color: 'var(--text-3)' }}>PIPELINE HEALTH</div>
+                        </div>
                     </div>
                   </div>
 

@@ -3,14 +3,16 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { useTheme } from '@/lib/ThemeContext'
+import { Home, Map as MapIcon, PenTool, LayoutDashboard, LifeBuoy, Users, Lock, Shield, Moon, Sun, HeartPulse } from 'lucide-react'
 import { SignInButton, UserButton, useUser } from '@clerk/nextjs'
 
 const NAV = [
-  { href: '/',          icon: '🏠', label: 'Home' },
-  { href: '/map',       icon: '🗺️', label: 'Safety Map' },
-  { href: '/report',    icon: '✏️', label: 'Report' },
-  { href: '/dashboard', icon: '📊', label: 'Dashboard' },
-  { href: '/sos',       icon: '🆘', label: 'SOS' },
+  { href: '/',          icon: <Home size={18} />, label: 'Home' },
+  { href: '/map',       icon: <MapIcon size={18} />, label: 'Safety Map' },
+  { href: '/community', icon: <Users size={18} />, label: 'Community Feed' },
+  { href: '/report',    icon: <PenTool size={18} />, label: 'Report' },
+  { href: '/dashboard', icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
+  { href: '/sos',       icon: <LifeBuoy size={18} />, label: 'SOS' },
 ]
 
 export default function Sidebar({ onClose }: { onClose?: () => void }) {
@@ -27,8 +29,8 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
             width: 36, height: 36, borderRadius: 'var(--r-md)',
             background: 'linear-gradient(135deg, var(--primary), var(--peach))',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '18px', boxShadow: '0 4px 12px rgba(212,113,122,0.3)'
-          }}>🌸</div>
+            boxShadow: '0 4px 12px rgba(212,113,122,0.3)', color: 'white'
+          }}><HeartPulse size={20} /></div>
           <div>
             <div style={{ fontFamily: 'var(--heading-font)', fontWeight: 700, fontSize: '16px', color: 'var(--text)' }}>
               Aurora<span style={{ color: 'var(--primary)' }}>Safe</span>
@@ -72,9 +74,9 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
             <SignInButton mode="modal">
               <button
                 className="sidebar-link"
-                style={{ width: '100%', border: 'none', background: 'var(--primary-subtle)', color: 'var(--primary)', fontWeight: 600, justifyContent: 'center' }}
+                style={{ width: '100%', border: 'none', background: 'var(--primary-subtle)', color: 'var(--primary)', fontWeight: 600, justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '8px' }}
               >
-                <span className="icon">🔒</span>
+                <Lock size={16} />
                 <span>Sign In / Register</span>
               </button>
             </SignInButton>
@@ -87,7 +89,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
                   }}
                 >
                   <UserButton.MenuItems>
-                    <UserButton.Link label="Profile Dashboard" labelIcon={<span style={{fontSize:'12px'}}>🛡️</span>} href="/profile" />
+                    <UserButton.Link label="Profile Dashboard" labelIcon={<Shield size={14} />} href="/profile" />
                   </UserButton.MenuItems>
                 </UserButton>
                 <Link href="/profile" onClick={onClose} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', textDecoration: 'none' }}>
@@ -116,7 +118,8 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
           }}
         >
           <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {theme === 'dark' ? '🌙' : '☀️'} <span>{theme === 'dark' ? 'Dark Mode' : 'Light Mode'}</span>
+            {theme === 'dark' ? <Moon size={16} /> : <Sun size={16} />}
+            <span>{theme === 'dark' ? 'Dark Mode' : 'Light Mode'}</span>
           </span>
           <div style={{
             width: 36, height: 20, borderRadius: 10,
@@ -136,9 +139,9 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
           background: 'linear-gradient(135deg, var(--primary-subtle), var(--accent-subtle))',
           borderRadius: 'var(--r-md)', padding: '14px', border: '1px solid var(--border)'
         }}>
-          <div style={{ fontSize: '20px', marginBottom: '6px' }}>🌸</div>
+          <div style={{ marginBottom: '6px', color: 'var(--primary)' }}><HeartPulse size={24} /></div>
           <div style={{ fontFamily: 'var(--heading-font)', fontSize: '13px', color: 'var(--text)', fontWeight: 600, marginBottom: '4px' }}>Stay safe,<br />stay connected.</div>
-          <div style={{ fontSize: '11px', color: 'var(--text-3)', lineHeight: 1.5 }}>You&apos;re not alone. We&apos;ve got your back. 💕</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-3)', lineHeight: 1.5 }}>You&apos;re not alone. We&apos;ve got your back.</div>
         </div>
       </div>
     </aside>

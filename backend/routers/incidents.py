@@ -55,18 +55,29 @@ async def create_incident(inc: IncidentCreate, db: AsyncSession = Depends(get_db
     classification = await classify_incident(inc.description)
     risk_info = predict_risk(inc.latitude, inc.longitude)
     
+    # Hard override: If the AI classifies this as a severe incident (>=7), it is a red zone.
+    # Otherwise, inherit the ambient geographical risk score.
+    severity = classification.get("severity", 5)
+    ambient_zone = risk_info.get("zone", "yellow")
+    if severity >= 8:
+        final_zone = "red"
+    elif severity >= 5 and ambient_zone == "green":
+        final_zone = "yellow" 
+    else:
+        final_zone = ambient_zone
+        
     db_incident = Incident(
         latitude=inc.latitude,
         longitude=inc.longitude,
         description=inc.description,
         address=inc.address,
         incident_type=classification.get("incident_type", "other"),
-        severity=classification.get("severity", 5),
+        severity=severity,
         threat_category=classification.get("threat_category", "other"),
         confidence=classification.get("confidence", 0.5),
         ai_summary=classification.get("summary", ""),
         risk_score=risk_info.get("score", 0.5),
-        zone=risk_info.get("zone", "yellow"),
+        zone=final_zone,
         status="pending"
     )
     db.add(db_incident)

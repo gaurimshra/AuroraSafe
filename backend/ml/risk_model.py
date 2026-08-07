@@ -49,19 +49,21 @@ def _generate_training_data(incidents: List[Dict] = None):
                 'risk_score': inc.get('risk_score', 0.5)
             })
     
-    # Add synthetic training data to prevent overfitting / missing states
-    # Note: Reduced synthetic size massively to favor real data accuracy for startup MVP
+    # Add synthetic training data ONLY if database is empty/weak
+    # Note: Startup MVP relies heavily on real DB data now.
     rng = np.random.default_rng(42)
-    n_synthetic = 50
+    n_synthetic = 10 if (incidents and len(incidents) > 100) else 200
     
-    # High-risk zones around Bangalore
+    # Delhi NCR Zones for ML edge-case boundary training
     high_risk_centers = [
-        (12.9352, 77.6245), (12.9719, 77.5937), (12.9580, 77.6513),
-        (13.0012, 77.5553), (12.9000, 77.5700)
+        (28.6640, 77.2584), # Seelampur
+        (28.6425, 77.2119), # Paharganj
+        (28.6515, 77.4262)  # Ghaziabad Station
     ]
     low_risk_centers = [
-        (12.9950, 77.6900), (12.9100, 77.6400), (13.0200, 77.5800),
-        (12.9400, 77.5200), (12.9700, 77.7100)
+        (28.5293, 77.1557), # Vasant Kunj
+        (28.5921, 77.2281), # Lodhi Colony
+        (28.4950, 77.0895)  # Cyber Hub Gurgaon
     ]
     
     for center in high_risk_centers:
@@ -161,9 +163,16 @@ def predict_risk(lat: float, lng: float, hour: Optional[int] = None,
         confidence = 0.3
     else:
         try:
-            features = np.array([[lat, lng, hour, day_of_week, 5, 6]])
-            risk_score = float(np.clip(_model.predict(features)[0], 0.0, 1.0))
-            confidence = 0.8
+            # Query the model properly handling dynamic hours
+            features = np.array([[lat, lng, hour, day_of_week, 5, 2]])
+            raw_prediction = float(_model.predict(features)[0])
+            
+            # Rebalance risk output based on time of day for areas where model interpolates thinly
+            if hour >= 20 or hour <= 4:
+                raw_prediction += 0.15
+            
+            risk_score = float(np.clip(raw_prediction, 0.0, 1.0))
+            confidence = 0.82
         except Exception as e:
             logger.error(f"Risk prediction failed: {e}")
             risk_score = 0.5
