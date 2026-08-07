@@ -86,7 +86,7 @@ export default function ProfilePage() {
         <div className="w-full md:w-1/3 flex flex-col gap-6">
           <div className="glass-card p-6 border-t border-t-white/10 rounded-2xl flex flex-col items-center">
             <img src={user.imageUrl} alt="Avatar" className="w-24 h-24 rounded-full border-4 border-primary/20 mb-4" />
-            <h1 className="text-2xl font-bold text-white">{user.fullName || user.username}</h1>
+            <h1 className="text-2xl font-bold text-text">{user.fullName || user.username}</h1>
             <p className="text-text-secondary mb-6">{user.primaryEmailAddress?.emailAddress}</p>
             
             <div className="w-full bg-surface p-4 rounded-xl flex items-center justify-between mb-4 border border-border">
@@ -137,7 +137,7 @@ export default function ProfilePage() {
                 {contacts.length === 0 ? <p className="text-text-secondary">No trusted contacts added.</p> : contacts.map(c => (
                   <div key={c.id} className="p-4 bg-surface rounded-xl border border-border flex justify-between items-center group">
                     <div>
-                      <h4 className="font-bold text-white">{c.name}</h4>
+                      <h4 className="font-bold text-text">{c.name}</h4>
                       <p className="text-xs text-text-secondary">{c.phone}</p>
                     </div>
                     <button 
@@ -170,7 +170,7 @@ export default function ProfilePage() {
                 {routes.length === 0 ? <p className="text-text-secondary">No saved routes yet. Add places like Home to Work.</p> : routes.map(r => (
                   <div key={r.id} className="p-4 bg-surface rounded-xl border border-border flex justify-between items-center">
                     <div>
-                      <h4 className="font-bold text-white">{r.name}</h4>
+                      <h4 className="font-bold text-text">{r.name}</h4>
                       <div className="flex items-center gap-2 text-xs text-text-secondary mt-1">
                         <MapPin className="w-3 h-3 text-accent" /> {r.start_address || 'Current'} → {r.end_address}
                       </div>
@@ -209,7 +209,7 @@ export default function ProfilePage() {
                   {history.map(h => (
                     <div key={h.id} className="relative">
                       <div className="absolute w-3 h-3 bg-danger rounded-full -left-[31px] top-1 shadow-[0_0_10px_rgba(239,68,68,0.5)]" />
-                      <h4 className="text-sm font-bold text-white mb-1">Emergency SOS Triggered</h4>
+                      <h4 className="text-sm font-bold text-text mb-1">Emergency SOS Triggered</h4>
                       <p className="text-xs text-text-secondary mb-2">{new Date(h.created_at).toLocaleString()}</p>
                       <p className="text-xs text-text-3 bg-surface border border-border p-3 rounded-lg">
                         <MapPin className="w-3 h-3 inline mr-1 text-primary"/> {h.location_text || `${h.latitude}, ${h.longitude}`}
@@ -232,7 +232,7 @@ export default function ProfilePage() {
                       <span className="text-xs font-bold uppercase text-warning bg-warning/10 px-2 py-0.5 rounded-full">{r.incident_type.replace('_', ' ')}</span>
                       <span className="text-xs text-text-secondary">{new Date(r.created_at).toLocaleDateString()}</span>
                     </div>
-                    <p className="text-sm text-white mb-3 line-clamp-2">{r.description}</p>
+                    <p className="text-sm text-text mb-3 line-clamp-2">{r.description}</p>
                     <div className="flex gap-2">
                       <span className="text-[10px] bg-primary/20 text-primary px-2 py-1 rounded">👍 {r.upvotes} Upvotes</span>
                       <span className="text-[10px] bg-safe/20 text-safe px-2 py-1 rounded">{'★'.repeat(5)} Verified</span>

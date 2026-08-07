@@ -137,7 +137,7 @@ export default function ReportPage() {
                 value={address}
                 onChange={e => setAddress(e.target.value)}
                 placeholder="e.g. Near Central Park entrance"
-                className="w-full bg-surface border border-border rounded-lg px-4 py-3 text-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                className="w-full bg-surface border border-border rounded-lg px-4 py-3 text-text text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
               />
             </div>
 
@@ -151,7 +151,7 @@ export default function ReportPage() {
                 rows={5}
                 required
                 placeholder="Describe what you saw in detail — Gemini AI will analyze this to classify severity, type, and risk level."
-                className="w-full bg-surface border border-border rounded-lg px-4 py-3 text-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all resize-none"
+                className="w-full bg-surface border border-border rounded-lg px-4 py-3 text-text text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all resize-none"
               />
               <p className="text-xs text-text-muted">{description.length} characters — be specific for better AI classification</p>
             </div>
@@ -186,7 +186,7 @@ export default function ReportPage() {
               <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 ${result?.zone === 'red' ? 'bg-danger/20' : result?.zone === 'yellow' ? 'bg-warning/20' : 'bg-safe/20'}`}>
                 {result?.zone === 'red' ? <AlertTriangle className="w-10 h-10 text-danger" /> : <ShieldCheck className="w-10 h-10 text-safe" />}
               </div>
-              <h2 className="text-3xl font-bold text-white">Report Submitted!</h2>
+              <h2 className="text-3xl font-bold text-text">Report Submitted!</h2>
               <p className="text-text-secondary mt-2">Gemini AI has analyzed and classified your report.</p>
             </div>
 
@@ -208,7 +208,7 @@ export default function ReportPage() {
               </div>
               <div className="bg-surface p-4 rounded-xl border border-border">
                 <div className="text-xs text-text-secondary mb-2">AI Confidence</div>
-                <div className="font-bold text-white">{result?.confidence ? `${(result.confidence * 100).toFixed(0)}%` : '—'}</div>
+                <div className="font-bold text-text">{result?.confidence ? `${(result.confidence * 100).toFixed(0)}%` : '—'}</div>
               </div>
               <div className="bg-surface p-4 rounded-xl border border-border col-span-2">
                 <div className="text-xs text-text-secondary mb-2">AI Summary</div>
@@ -216,7 +216,7 @@ export default function ReportPage() {
               </div>
               <div className="bg-surface p-4 rounded-xl border border-border col-span-2">
                 <div className="text-xs text-text-secondary mb-2">Threat Category</div>
-                <div className="font-medium capitalize text-white">{result?.threat_category?.replace('_', ' ') || '—'}</div>
+                <div className="font-medium capitalize text-text">{result?.threat_category?.replace('_', ' ') || '—'}</div>
               </div>
             </div>
 

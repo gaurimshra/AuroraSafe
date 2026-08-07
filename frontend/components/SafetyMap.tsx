@@ -41,6 +41,7 @@ interface MapProps {
   onMapClick?: (e: any) => void
   center?: [number, number]
   zoom?: number
+  userLocation?: [number, number] | null
 }
 
 function HeatmapLayer({ points }: { points: [number, number, number][] }) {
@@ -102,7 +103,8 @@ export default function SafetyMap({
   route = null,
   onMapClick,
   center = [12.9716, 77.5946],
-  zoom = 13
+  zoom = 13,
+  userLocation
 }: MapProps) {
   useEffect(() => {
     const L = require('leaflet')
@@ -140,6 +142,21 @@ export default function SafetyMap({
 
       {/* Heatmap layer */}
       {heatmapPoints.length > 0 && <HeatmapLayer points={heatmapPoints} />}
+
+      {/* Current User Location Pin */}
+      {userLocation && (
+        <CircleMarker
+          center={userLocation}
+          radius={8}
+          color="#ffffff"
+          fillColor="#3b82f6"
+          fillOpacity={1}
+          weight={2}
+          className="animate-pulse"
+        >
+          <Popup><div className="font-bold">You are here</div></Popup>
+        </CircleMarker>
+      )}
 
       {/* Safe Havens Layer */}
       {safeHavens && safeHavens.map((sh, idx) => (

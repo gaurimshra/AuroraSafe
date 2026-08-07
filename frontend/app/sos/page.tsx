@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Phone, Users, ShieldAlert, ShieldCheck, MapPin, X, Plus, Loader2, AlertTriangle, Lock } from 'lucide-react'
+import { Phone, Users, ShieldAlert, ShieldCheck, MapPin, X, Plus, Loader2, AlertTriangle, Lock, Sun, CloudRain, CloudSun, Activity } from 'lucide-react'
 import { triggerSOS, getSOSHistory, getSOSContacts, addSOSContact, deleteSOSContact } from '@/lib/api'
 import { useUser, SignInButton } from '@clerk/nextjs'
 
@@ -236,7 +236,7 @@ export default function SOSPage() {
       {stealthMode && (
         <div className="fixed inset-0 z-[9999] bg-sky-100 flex flex-col items-center justify-center">
           <div className="text-center">
-            <div className="text-6xl mb-4">🌤️</div>
+            <Sun size={64} className="text-sky-400 mx-auto mb-4 animate-pulse" />
             <h1 className="text-3xl font-bold text-sky-800">Delhi Weather</h1>
             <p className="text-sky-600 text-xl mt-2">26°C · Partly Cloudy</p>
             <p className="text-sky-500 text-sm mt-4">Humidity: 68% · Wind: 12 km/h NW</p>
@@ -244,7 +244,9 @@ export default function SOSPage() {
               {['Mon', 'Tue', 'Wed'].map((d, i) => (
                 <div key={d} className="bg-white/50 rounded-xl p-3">
                   <div className="text-sky-700 text-sm font-medium">{d}</div>
-                  <div className="text-2xl my-1">{['⛅', '🌧', '☀️'][i]}</div>
+                  <div className="flex justify-center my-2 text-sky-500">
+                    {i === 0 ? <CloudSun size={24} /> : i === 1 ? <CloudRain size={24} /> : <Sun size={24} />}
+                  </div>
                   <div className="text-sky-600 text-sm">{[24, 22, 28][i]}°</div>
                 </div>
               ))}
@@ -316,13 +318,13 @@ export default function SOSPage() {
                         : 'bg-surface border-border text-text-secondary hover:border-primary'
                     }`}
                   >
-                    📳 {shakeEnabled ? `Shake Active ${shakeHint ? `(${shakeHint})` : ''}` : 'Enable Shake SOS'}
+                    <Activity size={14} className="inline mr-1 mb-0.5" /> {shakeEnabled ? `Shake Active ${shakeHint ? `(${shakeHint})` : ''}` : 'Enable Shake SOS'}
                   </button>
                   <button
                     onClick={() => setStealthMode(true)}
                     className="flex-1 text-xs py-2.5 px-3 rounded-xl border border-border bg-surface text-text-secondary hover:border-warning hover:text-warning font-medium transition-all"
                   >
-                    🎭 Stealth Mode
+                    <Lock size={14} className="inline mr-1 mb-0.5" /> Stealth Mode
                   </button>
                 </div>
 
@@ -531,8 +533,8 @@ export default function SOSPage() {
                       <span>{new Date(h.created_at).toLocaleString()}</span>
                       <span className="text-danger">SOS</span>
                     </div>
-                    <div className="text-text-secondary truncate pr-4">📍 {h.location_text || 'Unknown location'}</div>
-                    <div className="text-text-secondary mt-1">👥 {h.contact_count} contacts notified</div>
+                    <div className="text-text-secondary truncate pr-4 flex items-center"><MapPin size={12} className="inline mr-1 text-primary" /> {h.location_text || 'Unknown location'}</div>
+                    <div className="text-text-secondary mt-1 flex items-center"><Users size={12} className="inline mr-1 text-primary" /> {h.contact_count} contacts notified</div>
                   </div>
                 ))}
               </div>

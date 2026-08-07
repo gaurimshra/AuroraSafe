@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import dynamic from 'next/dynamic'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Search, Map as MapIcon, Bell, Radio, MapPin, Newspaper, Moon, Sun, CloudRain, ShieldCheck, Info, AlertTriangle, Zap, CheckCircle, Crosshair, Users } from 'lucide-react'
 import RiskBadge from '@/components/RiskBadge'
 import { getHeatmap, getIncidents, getZones, getRiskScore, getSafeRoute, getNearbyAlerts, getWeather, getDataSourceStatus, getTriggerNews, getLiveFactors, getPoliceStations } from '@/lib/api'
 import { geocodeAddress } from '@/lib/geocode'
@@ -29,6 +29,7 @@ export default function MapPage() {
   const [route, setRoute] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [mapCenter, setMapCenter] = useState<[number, number]>([28.6139, 77.2090])
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
 
   // Risk check
   const [riskAddr, setRiskAddr] = useState('')
@@ -84,6 +85,15 @@ export default function MapPage() {
   }, [])
 
   useEffect(() => { fetchMapData(); const t = setInterval(fetchMapData, 30000); return () => clearInterval(t) }, [fetchMapData])
+  
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(p => {
+        setUserLocation([p.coords.latitude, p.coords.longitude])
+        setMapCenter([p.coords.latitude, p.coords.longitude])
+      }, () => {})
+    }
+  }, [])
 
   const getMyLoc = (cb: (lat: string, lng: string) => void) => {
     navigator.geolocation?.getCurrentPosition(p => cb(p.coords.latitude.toFixed(6), p.coords.longitude.toFixed(6)))
@@ -141,11 +151,11 @@ export default function MapPage() {
 
   const filteredIncidents = filter === 'all' ? incidents : incidents.filter(i => i.zone === filter)
 
-  const TABS: { key: Tab; label: string; icon: string }[] = [
-    { key: 'check',  label: 'Risk Score', icon: '🔍' },
-    { key: 'route',  label: 'Safe Route', icon: '🗺️' },
-    { key: 'alerts', label: 'Alerts',     icon: '🔔' },
-    { key: 'feed',   label: 'Live Feed',  icon: '📡' },
+  const TABS: { key: Tab; label: string; icon: React.ReactNode }[] = [
+    { key: 'check',  label: 'Risk Score', icon: <Search size={14} /> },
+    { key: 'route',  label: 'Safe Route', icon: <MapIcon size={14} /> },
+    { key: 'alerts', label: 'Alerts',     icon: <Bell size={14} /> },
+    { key: 'feed',   label: 'Live Feed',  icon: <Radio size={14} /> },
   ]
 
   return (
@@ -209,6 +219,7 @@ export default function MapPage() {
             safeHavens={safeHavensLayer ? safeHavens : []}
             route={route}
             center={mapCenter}
+            userLocation={userLocation}
             zoom={13}
           />
         </div>
@@ -285,11 +296,11 @@ export default function MapPage() {
                     transition: 'all 0.2s'
                   }}
                 >
-                  📍 Use My Current Location
+                  <Crosshair size={14} /> Use My Current Location
                 </button>
-                {riskErr && <p style={{ fontSize: 12, color: 'var(--danger)', marginBottom: 8 }}>⚠ {riskErr}</p>}
+                {riskErr && <p style={{ fontSize: 12, color: 'var(--danger)', marginBottom: 8 }}><AlertTriangle size={14} className="inline mr-1" /> {riskErr}</p>}
                 <button className="btn-primary" onClick={handleRisk} disabled={riskLoading} style={{ width: '100%', justifyContent: 'center' }}>
-                  {riskLoading ? <><Loader2 style={{ width: 14, height: 14, animation: 'spin 1s linear infinite' }} /> Analyzing...</> : '🔍 Check Risk Score'}
+                  {riskLoading ? <><Loader2 style={{ width: 14, height: 14, animation: 'spin 1s linear infinite' }} /> Analyzing...</> : <><Search size={14} className="inline mr-1" /> Check Risk Score</>}
                 </button>
               </div>
 
@@ -321,11 +332,11 @@ export default function MapPage() {
                       <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-2)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Why this score?</p>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                         {[
-                          { icon: '📍', label: `${liveFactors.factors?.historical_incidents?.count_1km || 0} incidents within 1km`, color: 'var(--danger)' },
-                          { icon: '📰', label: `${liveFactors.factors?.recent_news?.count_24h || 0} reports in last 24h`, color: 'var(--warning)' },
-                          { icon: liveFactors.factors?.time_of_day?.period === 'late_night' ? '🌙' : '🌤', label: `${liveFactors.factors?.time_of_day?.period?.replace('_', ' ')} — ${(liveFactors.factors?.time_of_day?.safety_factor * 100).toFixed(0)}% time factor`, color: 'var(--primary)' },
-                          { icon: '🌦', label: `${liveFactors.factors?.weather?.condition} — ${(liveFactors.factors?.weather?.safety_factor * 100).toFixed(0)}% weather factor`, color: 'var(--accent)' },
-                          { icon: '👮', label: liveFactors.factors?.infrastructure?.police_nearby ? `Police station ${liveFactors.factors?.infrastructure?.nearest_police_m}m away` : 'No police station nearby', color: 'var(--safe)' },
+                          { icon: <MapPin size={12} />, label: `${liveFactors.factors?.historical_incidents?.count_1km || 0} incidents within 1km`, color: 'var(--danger)' },
+                          { icon: <Newspaper size={12} />, label: `${liveFactors.factors?.recent_news?.count_24h || 0} reports in last 24h`, color: 'var(--warning)' },
+                          { icon: liveFactors.factors?.time_of_day?.period === 'late_night' ? <Moon size={12} /> : <Sun size={12} />, label: `${liveFactors.factors?.time_of_day?.period?.replace('_', ' ')} — ${(liveFactors.factors?.time_of_day?.safety_factor * 100).toFixed(0)}% time factor`, color: 'var(--primary)' },
+                          { icon: <CloudRain size={12} />, label: `${liveFactors.factors?.weather?.condition} — ${(liveFactors.factors?.weather?.safety_factor * 100).toFixed(0)}% weather factor`, color: 'var(--accent)' },
+                          { icon: <ShieldCheck size={12} />, label: liveFactors.factors?.infrastructure?.police_nearby ? `Police station ${liveFactors.factors?.infrastructure?.nearest_police_m}m away` : 'No police station nearby', color: 'var(--safe)' },
                         ].map((f, i) => (
                           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--text-2)' }}>
                             <span>{f.icon}</span>
@@ -337,7 +348,7 @@ export default function MapPage() {
                   )}
 
                   <div style={{ background: 'var(--surface)', borderRadius: 'var(--r-sm)', padding: '10px 12px', fontSize: 12, color: 'var(--text-2)', lineHeight: 1.5, marginTop: 12 }}>
-                    💡 {riskResult.message}
+                    <Info size={14} className="inline mr-1" /> {riskResult.message}
                   </div>
                 </div>
               )}
@@ -352,23 +363,23 @@ export default function MapPage() {
                   Route is calculated to avoid high-risk areas. Enter any addresses.
                 </p>
                 <div style={{ marginBottom: 10 }}>
-                  <label className="label">🌿 Origin</label>
+                  <label className="label"><MapPin size={14} className="inline mr-1 text-primary" /> Origin</label>
                   <div style={{ display: 'flex', gap: 6 }}>
                     <input value={origin} onChange={e => setOrigin(e.target.value)} placeholder="e.g. Karol Bagh, Delhi" className="input-field" style={{ flex: 1 }} />
                     <button
                       onClick={() => navigator.geolocation?.getCurrentPosition(p => setOrigin(`${p.coords.latitude.toFixed(4)}, ${p.coords.longitude.toFixed(4)}`))}
                       title="Use my location"
-                      style={{ padding: '0 12px', background: 'var(--primary-subtle)', border: '1.5px solid var(--border)', borderRadius: 'var(--r-md)', cursor: 'pointer', fontSize: 14, flexShrink: 0 }}
-                    >📍</button>
+                      style={{ padding: '0 12px', background: 'var(--primary-subtle)', border: '1.5px solid var(--border)', borderRadius: 'var(--r-md)', cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0 }}
+                    ><Crosshair size={14}/></button>
                   </div>
                 </div>
                 <div style={{ marginBottom: 12 }}>
-                  <label className="label">🔮 Destination</label>
+                  <label className="label"><MapPin size={14} className="inline mr-1 text-accent" /> Destination</label>
                   <input value={dest} onChange={e => setDest(e.target.value)} placeholder="e.g. Saket, Delhi" className="input-field" />
                 </div>
-                {routeErr && <p style={{ fontSize: 12, color: 'var(--danger)', marginBottom: 8 }}>⚠ {routeErr}</p>}
+                {routeErr && <p style={{ fontSize: 12, color: 'var(--danger)', marginBottom: 8 }}><AlertTriangle size={14} className="inline mr-1" /> {routeErr}</p>}
                 <button className="btn-primary" onClick={handleRoute} disabled={routeLoading || !origin || !dest} style={{ width: '100%', justifyContent: 'center' }}>
-                  {routeLoading ? <><Loader2 style={{ width: 14, height: 14, animation: 'spin 1s linear infinite' }} /> Calculating...</> : '🗺️ Find Safest Route'}
+                  {routeLoading ? <><Loader2 style={{ width: 14, height: 14, animation: 'spin 1s linear infinite' }} /> Calculating...</> : <><MapIcon size={14} className="inline mr-1" /> Find Safest Route</>}
                 </button>
               </div>
 
@@ -418,7 +429,9 @@ export default function MapPage() {
                 <div key={i} className="card" style={{ padding: '14px 16px' }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 16 }}>{a.zone === 'red' ? '⚠️' : a.zone === 'yellow' ? '⚡' : '✅'}</span>
+                      <span className="flex items-center" style={{ color: a.zone === 'red' ? 'var(--danger)' : a.zone === 'yellow' ? 'var(--warning)' : 'var(--safe)' }}>
+                        {a.zone === 'red' ? <AlertTriangle size={16} /> : a.zone === 'yellow' ? <Zap size={16} /> : <CheckCircle size={16} />}
+                      </span>
                       <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', textTransform: 'capitalize' }}>
                         {a.incident_type?.replace('_', ' ')}
                       </span>
@@ -459,7 +472,7 @@ export default function MapPage() {
                 <>
                   <div className="card" style={{ padding: '14px 16px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                      <span style={{ fontSize: 12, fontWeight: 600 }}>📡 AI News Fetcher</span>
+                      <span style={{ fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}><Radio size={14} className="text-primary" /> AI News Fetcher</span>
                       <span style={{ fontSize: 10, color: 'var(--safe)', background: 'var(--safe-subtle)', padding: '2px 6px', borderRadius: 10 }}>Active</span>
                     </div>
                     <div style={{ fontSize: 11, color: 'var(--text-2)', marginBottom: 8 }}>
@@ -484,7 +497,7 @@ export default function MapPage() {
 
                   <div className="card" style={{ padding: '14px 16px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                      <span style={{ fontSize: 12, fontWeight: 600 }}>👥 Community Reports</span>
+                      <span style={{ fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}><Users size={14} className="text-primary" /> Community Reports</span>
                       <span style={{ fontSize: 10, color: 'var(--safe)', background: 'var(--safe-subtle)', padding: '2px 6px', borderRadius: 10 }}>Active</span>
                     </div>
                     <div style={{ background: 'var(--surface)', padding: 8, borderRadius: 6, textAlign: 'center', marginTop: 8 }}>
@@ -509,7 +522,9 @@ export default function MapPage() {
             display: 'flex', alignItems: 'center', justifyContent: 'space-between'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{ fontSize: 18 }}>{weather.safety_factor < 0.8 ? '🌧' : '🌤'}</div>
+              <div style={{ display: 'flex', alignItems: 'center', color: weather.safety_factor < 0.8 ? 'var(--danger)' : 'var(--safe)' }}>
+                {weather.safety_factor < 0.8 ? <CloudRain size={18} /> : <Sun size={18} />}
+              </div>
               <div>
                 <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text)' }}>
                   {weather.city}: {weather.temp_celsius}°C {weather.condition}

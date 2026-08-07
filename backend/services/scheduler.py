@@ -1,6 +1,6 @@
 """
 APScheduler Background Jobs for AuroraSafe
-Runs automated data fetching tasks at configured intervals.
+Runs  automated data fetching tasks at configured intervals.
 Integrated into FastAPI lifespan — starts on app boot, shuts down cleanly.
 """
 import logging

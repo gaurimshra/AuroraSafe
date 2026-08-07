@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { AlertTriangle, ShieldCheck, Clock, Activity, Loader2, RefreshCw } from 'lucide-react'
+import { AlertTriangle, ShieldCheck, Clock, Activity, Loader2, RefreshCw, Sun, CloudRain, Newspaper, LifeBuoy, Users, History } from 'lucide-react'
 import dynamic from 'next/dynamic'
 
 // Recharts components without SSR to prevent Next.js 14 prerender crash
@@ -96,7 +96,7 @@ export default function DashboardPage() {
         {loading ? (
           <div className="w-16 h-7 bg-surface animate-pulse rounded mb-1" />
         ) : (
-          <div className="text-2xl font-bold text-white">{value}</div>
+          <div className="text-2xl font-bold text-text">{value}</div>
         )}
         <div className="text-sm text-text-secondary">{label}</div>
       </div>
@@ -129,9 +129,9 @@ export default function DashboardPage() {
       {weather && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-6 glass-card p-4 flex items-center justify-between" style={{ borderLeft: '4px solid var(--primary)' }}>
           <div className="flex items-center gap-4">
-            <span className="text-3xl">{weather.safety_factor < 0.8 ? '🌧' : '🌤'}</span>
+            <span className="flex items-center justify-center text-3xl">{weather.safety_factor < 0.8 ? <CloudRain size={32} /> : <Sun size={32} />}</span>
             <div>
-              <div className="font-bold text-white text-lg">{weather.city}: {weather.temp_celsius}°C {weather.condition}</div>
+              <div className="font-bold text-text text-lg">{weather.city}: {weather.temp_celsius}°C {weather.condition}</div>
               <div className="text-sm text-text-secondary">Visibility: {(weather.visibility_m / 1000).toFixed(1)} km | Wind: {weather.wind_speed_mps} m/s</div>
             </div>
           </div>
@@ -147,25 +147,25 @@ export default function DashboardPage() {
       {/* Data Source Breakdown */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div className="glass-card p-4 border border-border/50">
-          <div className="text-xs text-text-secondary mb-1">📰 AI-Verified News</div>
+          <div className="text-xs text-text-secondary mb-1 flex items-center gap-1.5"><Newspaper size={14} /> AI-Verified News</div>
           <div className="text-xl font-bold text-primary">
             {(stats?.source_counts?.newsapi || 0) + (stats?.source_counts?.gnews || 0) + (stats?.source_counts?.fallback_news || 0)}
           </div>
         </div>
         <div className="glass-card p-4 border border-border/50">
-          <div className="text-xs text-text-secondary mb-1">🆘 Emergency Triggers</div>
+          <div className="text-xs text-text-secondary mb-1 flex items-center gap-1.5"><LifeBuoy size={14} /> Emergency Triggers</div>
           <div className="text-xl font-bold text-danger">
             {stats?.source_counts?.sos || 0}
           </div>
         </div>
         <div className="glass-card p-4 border border-border/50">
-          <div className="text-xs text-text-secondary mb-1">👤 Community Reports</div>
+          <div className="text-xs text-text-secondary mb-1 flex items-center gap-1.5"><Users size={14} /> Community Reports</div>
           <div className="text-xl font-bold text-warning">
             {stats?.source_counts?.user_report || 0}
           </div>
         </div>
         <div className="glass-card p-4 border border-border/50">
-          <div className="text-xs text-text-secondary mb-1">🕰️ Historical Data</div>
+          <div className="text-xs text-text-secondary mb-1 flex items-center gap-1.5"><History size={14} /> Historical Data</div>
           <div className="text-xl font-bold text-text-3">
             {stats?.source_counts?.seed_data || 0}
           </div>
@@ -276,11 +276,11 @@ export default function DashboardPage() {
               <tbody className="divide-y divide-border">
                 {zones.map((zone, i) => (
                   <tr key={i} className="hover:bg-surface/30 transition-colors">
-                    <td className="px-6 py-4 font-mono text-sm text-white">
+                    <td className="px-6 py-4 font-mono text-sm text-text">
                       {zone.lat.toFixed(4)}, {zone.lng.toFixed(4)}
                     </td>
                     <td className="px-6 py-4"><RiskBadge zone={zone.risk_level} /></td>
-                    <td className="px-6 py-4 text-white font-bold">{zone.incident_count}</td>
+                    <td className="px-6 py-4 text-text font-bold">{zone.incident_count}</td>
                     <td className="px-6 py-4 text-text-secondary capitalize">{zone.dominant_type?.replace('_', ' ')}</td>
                     <td className="px-6 py-4 text-text-secondary">{zone.radius.toFixed(2)} km</td>
                   </tr>

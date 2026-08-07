@@ -103,7 +103,7 @@ export default function CommunityPage() {
                 <button 
                   onClick={() => handleVote(incident.id, 'up')}
                   disabled={!!voted[incident.id]}
-                  className={`p-1 rounded hover:bg-safe/20 transition-colors ${voted[incident.id] === 'up' ? 'text-safe' : 'text-text-secondary hover:text-white'}`}
+                  className={`p-1 rounded hover:bg-safe/20 transition-colors ${voted[incident.id] === 'up' ? 'text-safe' : 'text-text-secondary hover:text-text'}`}
                 >
                   <ArrowBigUp className="w-6 h-6" />
                 </button>
@@ -113,7 +113,7 @@ export default function CommunityPage() {
                 <button 
                   onClick={() => handleVote(incident.id, 'down')}
                   disabled={!!voted[incident.id]}
-                  className={`p-1 rounded hover:bg-danger/20 transition-colors ${voted[incident.id] === 'down' ? 'text-danger' : 'text-text-secondary hover:text-white'}`}
+                  className={`p-1 rounded hover:bg-danger/20 transition-colors ${voted[incident.id] === 'down' ? 'text-danger' : 'text-text-secondary hover:text-text'}`}
                 >
                   <ArrowBigDown className="w-6 h-6" />
                 </button>
@@ -151,7 +151,7 @@ export default function CommunityPage() {
                 {/* Footer details */}
                 <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-border/50">
                   <div className="flex items-center gap-2 text-xs text-text-3">
-                    <MapPin className="w-3.5 h-3.5 text-white" />
+                    <MapPin className="w-3.5 h-3.5 text-text" />
                     {incident.address || `${incident.latitude.toFixed(4)}, ${incident.longitude.toFixed(4)}`}
                   </div>
                   
@@ -160,7 +160,7 @@ export default function CommunityPage() {
                       href={incident.news_url} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="text-xs text-primary hover:text-white flex items-center gap-1 font-semibold transition-colors"
+                      className="text-xs text-primary hover:text-text flex items-center gap-1 font-semibold transition-colors"
                     >
                       Source Article <ExternalLink className="w-3.5 h-3.5" />
                     </a>

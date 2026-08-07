@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useTheme } from '@/lib/ThemeContext'
+import { Shield, Map as MapIcon, AlertTriangle, HeartPulse, Bot, Route, Globe, LifeBuoy, PenTool } from 'lucide-react'
 
 // Floating petal component
 function Petals() {
@@ -28,33 +29,33 @@ function Petals() {
 }
 
 const STATS = [
-  { icon: '🛡️', label: 'Incidents Mapped',  value: '1,247', trend: '+12% this week', color: 'var(--primary)'  },
-  { icon: '🗺️', label: 'Safe Routes',       value: '856',   trend: '+8% this week',  color: 'var(--accent)'  },
-  { icon: '⚠️', label: 'High Risk Zones',   value: '12',    trend: '-2% this week',  color: 'var(--warning)' },
-  { icon: '💜', label: 'Community Trust',   value: '98.2%', trend: '+4% this week',  color: 'var(--safe)'    },
+  { icon: <Shield size={18} />, label: 'Incidents Mapped',  value: '1,247', trend: '+12% this week', color: 'var(--primary)'  },
+  { icon: <MapIcon size={18} />, label: 'Safe Routes',       value: '856',   trend: '+8% this week',  color: 'var(--accent)'  },
+  { icon: <AlertTriangle size={18} />, label: 'High Risk Zones',   value: '12',    trend: '-2% this week',  color: 'var(--warning)' },
+  { icon: <HeartPulse size={18} />, label: 'Community Trust',   value: '98.2%', trend: '+4% this week',  color: 'var(--safe)'    },
 ]
 
 const FEATURES = [
   {
-    icon: '🔮',
+    icon: <Bot size={24} />,
     title: 'AI Risk Prediction',
     desc: 'Gemini AI analyzes incidents in real-time, scoring location risk before you arrive.',
     color: 'var(--primary-subtle)',
   },
   {
-    icon: '🗺️',
+    icon: <Route size={24} />,
     title: 'Safe Route Planning',
     desc: 'Routes calculated to avoid danger zones. Enter any address, get the safest path.',
     color: 'var(--accent-subtle)',
   },
   {
-    icon: '🌍',
+    icon: <Globe size={24} />,
     title: 'Community Reports',
     desc: 'Every report helps another woman stay safe. Crowdsourced intelligence, verified by AI.',
     color: 'var(--peach-subtle)',
   },
   {
-    icon: '🆘',
+    icon: <LifeBuoy size={24} />,
     title: 'One-Tap SOS',
     desc: 'Emergency alert sent to your trusted contacts with your live location in one tap.',
     color: 'var(--safe-subtle)',
@@ -131,14 +132,14 @@ export default function HomePage() {
             {/* CTAs */}
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 48 }}>
               <Link href="/map">
-                <button className="btn-primary" style={{ fontSize: 15, padding: '14px 32px' }}>
-                  🗺️ Explore Safety Map
+                <button className="btn-primary flex items-center justify-center gap-2" style={{ fontSize: 15, padding: '14px 32px' }}>
+                  <MapIcon size={16} /> Explore Safety Map
                   <span style={{ marginLeft: 4 }}>→</span>
                 </button>
               </Link>
               <Link href="/report">
-                <button className="btn-ghost" style={{ fontSize: 15, padding: '13px 28px' }}>
-                  ✏️ Report Incident
+                <button className="btn-ghost flex items-center justify-center gap-2" style={{ fontSize: 15, padding: '13px 28px' }}>
+                  <PenTool size={16} /> Report Incident
                 </button>
               </Link>
             </div>
@@ -178,8 +179,8 @@ export default function HomePage() {
               <div style={{
                 width: 36, height: 36, borderRadius: 'var(--r-sm)',
                 background: 'linear-gradient(135deg, var(--primary-subtle), var(--accent-subtle))',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0
-              }}>🤖</div>
+                display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', flexShrink: 0
+              }}><Bot size={20} /></div>
               <div>
                 <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary)', marginBottom: 2 }}>Gemini AI says</div>
                 <div style={{ fontSize: 12, color: '#2D1F1F', lineHeight: 1.4 }}>This route is safe. Enjoy your walk! 🌸</div>
@@ -266,8 +267,8 @@ export default function HomePage() {
                 </button>
               </Link>
               <Link href="/sos">
-                <button className="btn-ghost" style={{ padding: '13px 24px', fontSize: 15 }}>
-                  🆘 SOS Setup
+                <button className="btn-ghost flex items-center gap-1.5" style={{ padding: '13px 24px', fontSize: 15 }}>
+                  <LifeBuoy size={16} /> SOS Setup
                 </button>
               </Link>
             </div>
