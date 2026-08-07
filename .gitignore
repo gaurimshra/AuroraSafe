@@ -13,6 +13,8 @@ backend/.env
 *.jpg
 *.jpeg
 *.png
+!frontend/public/*.jpg
+!frontend/public/*.png
 
 # Dependencies
 node_modules/
