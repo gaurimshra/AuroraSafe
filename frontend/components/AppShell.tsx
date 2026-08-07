@@ -7,7 +7,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <>
       {/* Sidebar */}
-      <Sidebar onClose={() => setMobileOpen(false)} />
+      <Sidebar isOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
 
       {/* Mobile overlay */}
       {mobileOpen && (
@@ -18,15 +18,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Mobile topbar */}
-      <div style={{
-        display: 'none',
-        position: 'fixed', top: 0, left: 0, right: 0, height: 56, zIndex: 38,
-        background: 'var(--card)', borderBottom: '1px solid var(--border)',
-        alignItems: 'center', padding: '0 16px', gap: 12,
-        // @ts-ignore
-        '@media (maxWidth: 768px)': { display: 'flex' }
-      }} className="md:hidden flex fixed top-0 left-0 right-0 h-14 z-40 items-center px-4 gap-3"
-        style2={{background:'var(--card)', borderBottom:'1px solid var(--border)'}}
+      <div 
+        className="md:hidden flex fixed top-0 left-0 right-0 h-14 z-40 items-center px-4 gap-3"
+        style={{
+          background: 'var(--card)',
+          borderBottom: '1px solid var(--border)'
+        }}
       >
         <button
           onClick={() => setMobileOpen(true)}

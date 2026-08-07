@@ -484,8 +484,7 @@ h4,h5,h6 { font-family: var(--body-font); font-weight: 600; }
 
 /* ── Mobile ── */
 @media (max-width: 768px) {
-  :root { --sidebar-w: 0px; }
-  .sidebar { transform: translateX(-100%); }
+  .sidebar { transform: translateX(-100%); width: 260px; }
   .sidebar.open { transform: translateX(0); }
   .app-main { margin-left: 0; }
   .page { padding: 16px 16px 80px; }

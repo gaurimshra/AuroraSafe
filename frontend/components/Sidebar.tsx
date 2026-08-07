@@ -15,13 +15,13 @@ const NAV = [
   { href: '/sos',       icon: <LifeBuoy size={18} />, label: 'SOS' },
 ]
 
-export default function Sidebar({ onClose }: { onClose?: () => void }) {
+export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean, onClose?: () => void }) {
   const pathname = usePathname()
   const { theme, toggle } = useTheme()
   const { user, isSignedIn, isLoaded } = useUser()
 
   return (
-    <aside className="sidebar" style={{ padding: '0' }}>
+    <aside className={`sidebar ${isOpen ? 'open' : ''}`} style={{ padding: '0' }}>
       {/* Logo */}
       <div style={{ padding: '24px 20px 20px', borderBottom: '1px solid var(--border)' }}>
         <Link href="/" onClick={onClose} style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
