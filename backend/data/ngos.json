@@ -1,0 +1,72 @@
+[
+  {
+    "name": "Hamari Pahchan NGO",
+    "email": [
+      "pachhanhamari@gmail.com",
+      "info@hamaripahchan.com"
+    ],
+    "phones": [
+      "+919911173557",
+      "+918882590888",
+      "+917702050024"
+    ],
+    "whatsapp": "+917702050024",
+    "address": "H. No. 1121, Upper Ground Floor, Mahipalpur Bypass, Opposite Arjun Camp, New Delhi - 110037",
+    "lat": 28.545,
+    "lng": 77.124
+  },
+  {
+    "name": "Guild of Service",
+    "email": [
+      "guildofserviceni@gmail.com"
+    ],
+    "phones": [
+      "+911141013416",
+      "+911141013417"
+    ],
+    "whatsapp": "",
+    "address": "C-25, Qutub Institutional Area, New Delhi - 110016",
+    "lat": 28.535,
+    "lng": 77.191
+  },
+  {
+    "name": "Centre for Holistic Development (CHD)",
+    "email": [
+      "info@chdindia.org.in"
+    ],
+    "phones": [
+      "+919811327037"
+    ],
+    "whatsapp": "+919811327037",
+    "address": "253, First Floor, Ch. Ishwar Singh Complex, Gora St, Shahpur Jat, Siri Fort, New Delhi, Delhi 110017",
+    "lat": 28.549,
+    "lng": 77.218 
+  },
+  {
+    "name": "Being A Woman NGO",
+    "email": [
+      "contact@beingawoman.org"
+    ],
+    "phones": [
+      "+919717560272"
+    ],
+    "whatsapp": "+919717560272",
+    "address": "F-69/301, Abul Fazal Enclave Part 1, Jamia Nagar, Okhla, New Delhi",
+    "lat": 28.562,
+    "lng": 77.291
+  },
+  {
+    "name": "Somi Foundation",
+    "email": [
+      "info@somifoundation.org"
+    ],
+    "phones": [
+      "+919582949414",
+      "+919811560458"
+    ],
+    "whatsapp": "+919811560458",
+    "address": "New Delhi, Delhi",
+    "lat": 28.613,
+    "lng": 77.209
+  }
+]

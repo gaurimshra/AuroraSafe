@@ -12,6 +12,7 @@ const NAV = [
   { href: '/community', icon: <Users size={18} />, label: 'Community Feed' },
   { href: '/report',    icon: <PenTool size={18} />, label: 'Report' },
   { href: '/dashboard', icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
+  { href: '/ngos',      icon: <Shield size={18} />, label: 'NGO Partners' },
   { href: '/sos',       icon: <LifeBuoy size={18} />, label: 'SOS' },
 ]
 

@@ -32,6 +32,7 @@ export default function SOSPage() {
   const [newContact, setNewContact] = useState<Contact>({ name: '', phone: '', email: '' })
   const [sosSent, setSosSent] = useState(false)
   const [waLinks, setWaLinks] = useState<string[]>([])
+  const [ngos, setNgos] = useState<any[]>([])
   const [history, setHistory] = useState<any[]>([])
   const [stealthMode, setStealthMode] = useState(false)
   const [shakeEnabled, setShakeEnabled] = useState(false)
@@ -204,6 +205,9 @@ export default function SOSPage() {
       if (res?.wa_links && res.wa_links.length > 0) {
         setWaLinks(res.wa_links)
         window.open(res.wa_links[0], '_blank')
+      }
+      if (res?.nearby_ngos) {
+        setNgos(res.nearby_ngos)
       }
       loadHistory()
     } catch (err) {
@@ -413,6 +417,38 @@ export default function SOSPage() {
                         <div className="flex space-x-1 shrink-0">
                           <a href={`tel:${c.phone}`} className="p-2 bg-surface rounded-full text-white hover:bg-primary transition"><Phone className="w-3 h-3" /></a>
                           {waLinks[i] && <a href={waLinks[i]} target="_blank" rel="noreferrer" className="p-2 bg-surface rounded-full text-[#25D366] hover:bg-primary/20 transition"><ShieldAlert className="w-3 h-3" /></a>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Nearby Help / NGOs */}
+                {ngos.length > 0 && (
+                  <div className="w-full mb-6 space-y-2">
+                    <p className="text-xs text-text-secondary font-medium">Nearby Help (NGO Partners):</p>
+                    {ngos.map((ngo, i) => (
+                      <div key={`ngo-${i}`} className="flex flex-col bg-surface/30 border border-border rounded-lg p-3 text-left">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-bold text-sm text-white">🟢 {ngo.name}</span>
+                          <span className="text-[10px] uppercase font-bold text-safe bg-safe/20 border border-safe/30 px-2 py-0.5 rounded-full">{ngo.distance_km} km away</span>
+                        </div>
+                        <div className="flex gap-2 mt-1">
+                          {ngo.phones && ngo.phones.length > 0 && (
+                            <a href={`tel:${ngo.phones[0]}`} className="flex-1 flex justify-center items-center py-2 bg-surface rounded-lg border border-border text-xs text-white hover:border-primary transition">
+                              <Phone className="w-3 h-3 mr-1" /> Call
+                            </a>
+                          )}
+                          {ngo.wa_link && (
+                            <a href={ngo.wa_link} target="_blank" rel="noreferrer" className="flex-1 flex justify-center items-center py-2 bg-surface rounded-lg border border-[#25D366]/30 text-xs text-[#25D366] hover:bg-[#25D366]/10 transition">
+                              <ShieldAlert className="w-3 h-3 mr-1" /> WhatsApp
+                            </a>
+                          )}
+                          {(ngo.lat && ngo.lng) && (
+                            <a href={`https://maps.google.com/?daddr=${ngo.lat},${ngo.lng}`} target="_blank" rel="noreferrer" className="flex-1 flex justify-center items-center py-2 bg-surface rounded-lg border border-border text-xs text-white hover:border-accent transition">
+                              <MapPin className="w-3 h-3 mr-1" /> Navigate
+                            </a>
+                          )}
                         </div>
                       </div>
                     ))}

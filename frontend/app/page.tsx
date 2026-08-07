@@ -157,7 +157,7 @@ export default function HomePage() {
             position: 'relative',
           }}>
             <img
-              src={theme === 'dark' ? '/hero-dark.png' : '/hero-light.png'}
+              src="/avatar.jpg"
               alt="Cozy cherry blossom safety companion"
               style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
             />
