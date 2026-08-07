@@ -9,6 +9,7 @@ backend/.env
 # User-requested excluded files
 *.md
 !README.md
+*.pdf
 *.jpg
 *.jpeg
 *.png
