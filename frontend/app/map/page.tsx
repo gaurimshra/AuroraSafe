@@ -213,13 +213,7 @@ export default function MapPage() {
           />
         </div>
       </div>
-
-      {/* ── Side Panel ── */}
-      <div style={{
-        width: 340, height: '100dvh', background: 'var(--sidebar-bg)',
-        borderLeft: '1px solid var(--border)', display: 'flex', flexDirection: 'column',
-        overflowY: 'auto', flexShrink: 0
-      }}>
+      <div style={{ width: 340, height: '100dvh', background: 'var(--sidebar-bg)', borderLeft: '1px solid var(--border)', display: 'flex', flexDirection: 'column', overflowY: 'auto', flexShrink: 0 }}>
         {/* Header */}
         <div style={{ padding: '24px 20px 16px', borderBottom: '1px solid var(--border)' }}>
           <h2 style={{ fontFamily: 'var(--heading-font)', fontSize: 20, color: 'var(--text)', marginBottom: 4 }}>Safety Tools</h2>

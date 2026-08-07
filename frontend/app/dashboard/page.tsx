@@ -2,10 +2,20 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { AlertTriangle, ShieldCheck, Clock, Activity, Loader2, RefreshCw } from 'lucide-react'
-import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Legend
-} from 'recharts'
+import dynamic from 'next/dynamic'
+
+// Recharts components without SSR to prevent Next.js 14 prerender crash
+const ResponsiveContainer = dynamic(() => import('recharts').then(c => c.ResponsiveContainer as any), { ssr: false }) as any
+const AreaChart = dynamic(() => import('recharts').then(c => c.AreaChart as any), { ssr: false }) as any
+const Area = dynamic(() => import('recharts').then(c => c.Area as any), { ssr: false }) as any
+const XAxis = dynamic(() => import('recharts').then(c => c.XAxis as any), { ssr: false }) as any
+const YAxis = dynamic(() => import('recharts').then(c => c.YAxis as any), { ssr: false }) as any
+const CartesianGrid = dynamic(() => import('recharts').then(c => c.CartesianGrid as any), { ssr: false }) as any
+const Tooltip = dynamic(() => import('recharts').then(c => c.Tooltip as any), { ssr: false }) as any
+const Legend = dynamic(() => import('recharts').then(c => c.Legend as any), { ssr: false }) as any
+const PieChart = dynamic(() => import('recharts').then(c => c.PieChart as any), { ssr: false }) as any
+const Pie = dynamic(() => import('recharts').then(c => c.Pie as any), { ssr: false }) as any
+const Cell = dynamic(() => import('recharts').then(c => c.Cell as any), { ssr: false }) as any
 import RiskBadge from '@/components/RiskBadge'
 import { getDashboardStats, getDashboardTrends, getDashboardCategories, getZones, getWeather } from '@/lib/api'
 

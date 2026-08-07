@@ -43,7 +43,9 @@ Respond with ONLY valid JSON in this exact format (no markdown, no extra text):
   "is_credible": <true|false>
 }}
 
-Be accurate. Only classify as violent_crime for actual physical violence."""
+Rule 1: Be extremely accurate. 
+Rule 2: Severity definitions: 1-3 (verbal/suspicion), 4-6 (theft/groping/harassment), 7-9 (assault/weapons), 10 (fatality/critical).
+Rule 3: Only classify as violent_crime for actual physical violence or verifiable threats."""
 
             response = client.models.generate_content(
                 model="gemini-2.0-flash",
@@ -77,7 +79,9 @@ Respond with ONLY valid JSON in this exact format (no markdown, no extra text):
   "is_credible": <true|false>
 }}
 
-Be accurate. Only classify as violent_crime for actual physical violence."""
+Rule 1: Be extremely accurate. 
+Rule 2: Severity definitions: 1-3 (verbal/suspicion), 4-6 (theft/groping/harassment), 7-9 (assault/weapons), 10 (fatality/critical).
+Rule 3: Only classify as violent_crime for actual physical violence or verifiable threats."""
 
             response = model.generate_content(prompt)
             text = response.text.strip()

@@ -122,26 +122,27 @@ Open:
 
 ## Demo Flow
 
-1. Open the landing page and introduce AuroraSafe as a predictive safety platform.
-2. Go to `/map` and show the heatmap of safety incidents.
-3. Check a risk score with sample Bangalore coordinates such as `12.9352, 77.6245`.
-4. Generate a safer route and show how the route avoids red zones.
-5. Submit an incident on `/report` and show the AI classification output.
-6. Open `/dashboard` to show trends, categories, and high-risk zones.
+1. Open the landing page and introduce AuroraSafe as a predictive safety platform for Delhi NCR.
+2. Go to `/map` and show the verified density heatmap. The Live News background fetcher continuously updates this!
+3. Check a risk score with sample Delhi coordinates such as `28.6139, 77.2090`.
+4. Generate a safer route to showcase how the algorithm actively paths around AI-detected red zones.
+5. Provide a custom incident on `/report` to show real-time LLM validation.
+6. Open `/dashboard` to showcase trends, rate-limit resilient charts, and real-time community vs news stats.
 7. Open `/sos` and demonstrate the SOS trigger flow.
 8. Open `/docs` to show the backend API contract.
 
 ## How It Works
 
-AuroraSafe combines community reports, AI classification, and spatial risk scoring:
+AuroraSafe combines community reports, live scraped news, AI classification, and spatial risk scoring:
 
-- Incident reports are stored in SQLite through async SQLAlchemy.
-- Gemini classifies incident type, severity, category, confidence, and summary.
-- XGBoost predicts a risk score for coordinates using location and time features.
-- DBSCAN groups incident clusters into hotspot zones.
-- The frontend visualizes this data with maps, charts, and route controls.
+- **Live Data Ingestion**: APScheduler runs background jobs to fetch crime news from NewsAPI/GNews automatically, preventing blank states using smart fallback data if rate limits are hit.
+- **Incident Storage**: Incident reports are stored computationally fast in SQLite through async SQLAlchemy.
+- **LLM Contextualization**: Gemini 1.5/2.0 classifies incident type, severity, category, confidence, and summary with strict constraints (no severity inflation).
+- **Predictive Grounding**: XGBoost predicts risk scores using historical lat/lng density mixed directly from the SQLite database.
+- **Unsupervised Hotspots**: DBSCAN groups incident clusters into dynamic hotspot regions automatically.
+- **Visualization**: The Next.js client renders dynamic mapping, dynamic Recharts (SSR optimized), and routing.
 
-On backend startup, the app initializes the database, seeds demo incident data when the database is empty, and loads or trains the risk model.
+On backend startup, the app gracefully initializes all background jobs, seeds fallbacks if necessary, and compiles the ML models dynamically.
 
 ## Deployment Notes
 

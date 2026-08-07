@@ -16,16 +16,32 @@ _training_incidents = []
 def _generate_training_data(incidents: List[Dict] = None):
     """Generate or use real training data for XGBoost."""
     import pandas as pd
+    import sqlite3
+    import os
     
     rows = []
+    db_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'aurorasafe.db')
     
+    # Check if we should fetch from DB if no incidents explicitly provided
+    if not incidents and os.path.exists(db_path):
+        try:
+            conn = sqlite3.connect(db_path)
+            conn.row_factory = sqlite3.Row
+            cursor = conn.execute("SELECT latitude, longitude, severity, incident_type, risk_score FROM incidents")
+            db_rows = cursor.fetchall()
+            incidents = [dict(row) for row in db_rows]
+            conn.close()
+            logger.info(f"Loaded {len(incidents)} real incidents from database for ML training.")
+        except Exception as e:
+            logger.error(f"Failed loading DB incidents for ML: {e}")
+            
     # Use real incident data if available
     if incidents:
         for inc in incidents:
             hour = datetime.utcnow().hour  # simplified
             rows.append({
-                'lat': inc['latitude'],
-                'lng': inc['longitude'],
+                'lat': inc.get('latitude', 0.0),
+                'lng': inc.get('longitude', 0.0),
                 'hour': hour,
                 'day_of_week': datetime.utcnow().weekday(),
                 'severity': inc.get('severity', 5),
@@ -33,10 +49,10 @@ def _generate_training_data(incidents: List[Dict] = None):
                 'risk_score': inc.get('risk_score', 0.5)
             })
     
-    # Add synthetic training data to ensure model robustness
-    # Bangalore high-risk areas (synthetic)
+    # Add synthetic training data to prevent overfitting / missing states
+    # Note: Reduced synthetic size massively to favor real data accuracy for startup MVP
     rng = np.random.default_rng(42)
-    n_synthetic = 500
+    n_synthetic = 50
     
     # High-risk zones around Bangalore
     high_risk_centers = [
