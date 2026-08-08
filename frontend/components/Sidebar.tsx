@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { useTheme } from '@/lib/ThemeContext'
-import { Home, Map as MapIcon, PenTool, LayoutDashboard, LifeBuoy, Users, Lock, Shield, Moon, Sun, HeartPulse } from 'lucide-react'
+import { Home, Map as MapIcon, PenTool, LayoutDashboard, LifeBuoy, Users, Lock, Shield, Moon, Sun, HeartPulse, Briefcase } from 'lucide-react'
 import { SignInButton, UserButton, useUser } from '@clerk/nextjs'
 
 const NAV = [
@@ -13,6 +13,7 @@ const NAV = [
   { href: '/report',    icon: <PenTool size={18} />, label: 'Report' },
   { href: '/dashboard', icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
   { href: '/ngos',      icon: <Shield size={18} />, label: 'NGO Partners' },
+  { href: '/business',  icon: <Briefcase size={18} />, label: 'Business Model' },
   { href: '/sos',       icon: <LifeBuoy size={18} />, label: 'SOS' },
 ]
 
