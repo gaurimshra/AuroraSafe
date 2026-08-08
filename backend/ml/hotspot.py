@@ -16,10 +16,11 @@ def detect_hotspots(incidents: List[Dict]) -> List[Dict[str, Any]]:
     
     coords = np.array([[inc['latitude'], inc['longitude']] for inc in incidents])
     
-    # eps=0.008 ~= 0.8km, min_samples=3 for a cluster
+    # eps=1.5/6371.0 ~= 0.000235 (1.5km in radians), min_samples=3 for a cluster
     # Use haversine metric for geographic accuracy
     coords_rad = np.radians(coords)
-    db = DBSCAN(eps=0.008, min_samples=3, algorithm='ball_tree', metric='haversine').fit(coords_rad)
+    # Earth radius ~ 6371km. Target hotspot cluster radius: 1.5km
+    db = DBSCAN(eps=1.5/6371.0, min_samples=4, algorithm='ball_tree', metric='haversine').fit(coords_rad)
     
     labels = db.labels_
     unique_labels = set(labels) - {-1}  # -1 is noise

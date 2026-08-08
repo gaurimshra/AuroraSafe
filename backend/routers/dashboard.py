@@ -22,7 +22,7 @@ async def get_stats(db: AsyncSession = Depends(get_db)):
 
     # Explicit source counts — handles None and alias variants
     source_counts = {
-        "seed_data": sum(1 for i in incidents if (i.source or '') == 'seed_data'),
+        "seed_data": sum(1 for i in incidents if (i.source or '') in ('seed_data', 'police_db', 'transit_api', 'city_sensors')),
         "newsapi": sum(1 for i in incidents if (i.source or '') in ('newsapi', 'news_api', 'gnews')),
         "gnews": sum(1 for i in incidents if (i.source or '') == 'gnews'),
         "sos": sum(1 for i in incidents if (i.source or '') == 'sos' or i.incident_type == 'sos_emergency'),

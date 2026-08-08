@@ -20,7 +20,10 @@ async def seed_incidents():
         {"name": "Uttam Nagar East (City Safety)", "coords": (28.6212, 77.0664), "risk_bias": 0.6},
         {"name": "Karol Bagh Market", "coords": (28.6519, 77.1895), "risk_bias": 0.5},
         {"name": "Paharganj (Street Light Outages)", "coords": (28.6425, 77.2119), "risk_bias": 0.9},
-        {"name": "Lajpat Nagar Central Market", "coords": (28.5677, 77.2433), "risk_bias": 0.4}
+        {"name": "Lajpat Nagar Central Market", "coords": (28.5677, 77.2433), "risk_bias": 0.4},
+        {"name": "Noida Sector 62 (High Risk Hotspot)", "coords": (28.6280, 77.3649), "risk_bias": 0.85},
+        {"name": "Indirapuram, Ghaziabad", "coords": (28.6415, 77.3714), "risk_bias": 0.65},
+        {"name": "Greater Noida West", "coords": (28.5833, 77.4333), "risk_bias": 0.55}
     ]
     
     incident_templates = {
@@ -69,8 +72,8 @@ async def seed_incidents():
     incidents = []
     rng = np.random.default_rng(42)
     
-    # Generate 550 incidents for massive ML clustering structure
-    for i in range(550):
+    # Generate 800 incidents for deeper ML clustering structure and authentic database history
+    for i in range(800):
         nhood = random.choice(neighborhoods)
         
         # Dense spatial scattering
@@ -105,7 +108,12 @@ async def seed_incidents():
         else:
             status = "rejected"
             
-        days_ago = rng.integers(0, 45) # 45 days of memory
+        # Push 85% of data into the last 14 days to ensure the dashboard graphs are completely full
+        if random.random() < 0.85:
+            days_ago = rng.integers(0, 14)
+        else:
+            days_ago = rng.integers(14, 45) # 45 days of memory
+            
         hour = rng.integers(0, 24)
         created_at = datetime.utcnow() - timedelta(days=int(days_ago), hours=int(hour))
         

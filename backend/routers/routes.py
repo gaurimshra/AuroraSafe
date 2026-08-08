@@ -88,7 +88,8 @@ async def get_safe_route(request: RouteRequest, db: AsyncSession = Depends(get_d
     url = f"http://router.project-osrm.org/route/v1/driving/{origin.lng},{origin.lat};{dest.lng},{dest.lat}?alternatives=true&geometries=geojson"
     try:
         async with httpx.AsyncClient() as client:
-            resp = await client.get(url, timeout=10.0)
+            headers = {"User-Agent": "AuroraSafe/1.0 (contact@aurorasafe.local)"}
+            resp = await client.get(url, timeout=10.0, headers=headers)
             data = resp.json()
             if data.get("code") != "Ok" or not data.get("routes"):
                 return _fallback_straight_line(origin, dest, red_zones)

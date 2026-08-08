@@ -402,9 +402,15 @@ export default function MapPage() {
                       </div>
                     ))}
                   </div>
-                  <div style={{ background: 'var(--safe-subtle)', borderRadius: 'var(--r-sm)', padding: '8px 12px', fontSize: 12, color: 'var(--safe)', fontWeight: 600 }}>
-                    ✓ Route shown on map · {routeResult.avoided_zones} danger zone(s) avoided
-                  </div>
+                  {routeResult.route_type === 'fallback_safest' ? (
+                    <div style={{ background: 'var(--warning-subtle)', borderRadius: 'var(--r-sm)', padding: '8px 12px', fontSize: 12, color: 'var(--warning)', fontWeight: 600 }}>
+                      ⚠️ Road route unavailable. Showing straight-line approximation · {routeResult.avoided_zones} danger zone(s) avoided
+                    </div>
+                  ) : (
+                    <div style={{ background: 'var(--safe-subtle)', borderRadius: 'var(--r-sm)', padding: '8px 12px', fontSize: 12, color: 'var(--safe)', fontWeight: 600 }}>
+                      ✓ Route shown on map · {routeResult.avoided_zones} danger zone(s) avoided
+                    </div>
+                  )}
                 </div>
               )}
             </>

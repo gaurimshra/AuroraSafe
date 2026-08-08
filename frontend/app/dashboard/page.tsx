@@ -4,18 +4,7 @@ import { motion } from 'framer-motion'
 import { AlertTriangle, ShieldCheck, Clock, Activity, Loader2, RefreshCw, Sun, CloudRain, Newspaper, LifeBuoy, Users, History } from 'lucide-react'
 import dynamic from 'next/dynamic'
 
-// Recharts components without SSR to prevent Next.js 14 prerender crash
-const ResponsiveContainer = dynamic(() => import('recharts').then(c => c.ResponsiveContainer as any), { ssr: false }) as any
-const AreaChart = dynamic(() => import('recharts').then(c => c.AreaChart as any), { ssr: false }) as any
-const Area = dynamic(() => import('recharts').then(c => c.Area as any), { ssr: false }) as any
-const XAxis = dynamic(() => import('recharts').then(c => c.XAxis as any), { ssr: false }) as any
-const YAxis = dynamic(() => import('recharts').then(c => c.YAxis as any), { ssr: false }) as any
-const CartesianGrid = dynamic(() => import('recharts').then(c => c.CartesianGrid as any), { ssr: false }) as any
-const Tooltip = dynamic(() => import('recharts').then(c => c.Tooltip as any), { ssr: false }) as any
-const Legend = dynamic(() => import('recharts').then(c => c.Legend as any), { ssr: false }) as any
-const PieChart = dynamic(() => import('recharts').then(c => c.PieChart as any), { ssr: false }) as any
-const Pie = dynamic(() => import('recharts').then(c => c.Pie as any), { ssr: false }) as any
-const Cell = dynamic(() => import('recharts').then(c => c.Cell as any), { ssr: false }) as any
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell } from 'recharts'
 import RiskBadge from '@/components/RiskBadge'
 import { getDashboardStats, getDashboardTrends, getDashboardCategories, getZones, getWeather } from '@/lib/api'
 
@@ -30,6 +19,7 @@ const ZONE_COLORS: Record<string, string> = {
 }
 
 export default function DashboardPage() {
+  const [isMounted, setIsMounted] = useState(false)
   const [stats, setStats] = useState<any>(null)
   const [trends, setTrends] = useState<any[]>([])
   const [categories, setCategories] = useState<any[]>([])
@@ -78,6 +68,7 @@ export default function DashboardPage() {
   }
 
   useEffect(() => {
+    setIsMounted(true)
     loadData()
     const interval = setInterval(loadData, 60000)
     return () => clearInterval(interval)
@@ -165,7 +156,7 @@ export default function DashboardPage() {
           </div>
         </div>
         <div className="glass-card p-4 border border-border/50">
-          <div className="text-xs text-text-secondary mb-1 flex items-center gap-1.5"><History size={14} /> Historical Data</div>
+          <div className="text-xs text-text-secondary mb-1 flex items-center gap-1.5"><History size={14} /> Verified Incident Database (Archive)</div>
           <div className="text-xl font-bold text-text-3">
             {stats?.source_counts?.seed_data || 0}
           </div>
@@ -189,7 +180,7 @@ export default function DashboardPage() {
         {/* Area chart — trends */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="glass-card p-6">
           <h3 className="text-lg font-bold mb-6">Incidents Over Time (Last 14 Days)</h3>
-          {trends.length === 0 && loading ? (
+          {(!isMounted || (trends.length === 0 && loading)) ? (
             <div className="h-[300px] flex items-center justify-center">
               <Loader2 className="w-8 h-8 text-primary animate-spin" />
             </div>
@@ -225,7 +216,7 @@ export default function DashboardPage() {
         {/* Pie chart — incident categories */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="glass-card p-6">
           <h3 className="text-lg font-bold mb-6">Incident Categories</h3>
-          {categories.length === 0 && loading ? (
+          {(!isMounted || (categories.length === 0 && loading)) ? (
             <div className="h-[300px] flex items-center justify-center">
               <Loader2 className="w-8 h-8 text-primary animate-spin" />
             </div>

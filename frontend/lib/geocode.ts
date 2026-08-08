@@ -1,7 +1,8 @@
 // Free geocoding via Nominatim (OpenStreetMap) - no API key needed
 export async function geocodeAddress(address: string): Promise<{ lat: number; lng: number; display_name: string } | null> {
   try {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`;
+    // Adding countrycodes=in helps Nominatim locate Indian cities much more reliably without full addresses.
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1&countrycodes=in`;
     const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
     const data = await res.json();
     if (data && data.length > 0) {
