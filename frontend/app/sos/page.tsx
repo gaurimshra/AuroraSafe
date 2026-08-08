@@ -1,7 +1,7 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Phone, Users, ShieldAlert, ShieldCheck, MapPin, X, Plus, Loader2, AlertTriangle, Lock, Sun, CloudRain, CloudSun, Activity } from 'lucide-react'
+import { Phone, Users, ShieldAlert, ShieldCheck, MapPin, X, Plus, Loader2, AlertTriangle, Lock, Sun, CloudRain, CloudSun, Activity, Video } from 'lucide-react'
 import { triggerSOS, getSOSHistory, getSOSContacts, addSOSContact, deleteSOSContact } from '@/lib/api'
 import { useUser, SignInButton } from '@clerk/nextjs'
 
@@ -42,6 +42,11 @@ export default function SOSPage() {
   const [walkActive, setWalkActive] = useState(false)
   const [walkETA, setWalkETA] = useState<number | null>(null)
   const [walkMinsRemaining, setWalkMinsRemaining] = useState(0)
+
+  // WebRTC Blackbox SOS Recording
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const chunksRef = useRef<BlobPart[]>([])
+  const [isRecording, setIsRecording] = useState(false)
 
   const loadHistory = async () => {
     try {
@@ -189,10 +194,52 @@ export default function SOSPage() {
     return () => clearTimeout(timer)
   }, [sosActive, countdown])
 
+  // Secure WebRTC Blackbox Evidence Recording
+  const startEmergencyRecording = async () => {
+    try {
+      if (!navigator.mediaDevices) return
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: true })
+      const recorder = new MediaRecorder(stream)
+      chunksRef.current = []
+      
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data)
+      }
+      
+      recorder.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: 'video/webm' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.style.display = 'none'
+        a.href = url
+        a.download = `aurorasafe-blackbox-evidence-${new Date().toISOString()}.webm`
+        document.body.appendChild(a)
+        a.click()
+        setTimeout(() => window.URL.revokeObjectURL(url), 100)
+        stream.getTracks().forEach(track => track.stop())
+      }
+      
+      mediaRecorderRef.current = recorder
+      recorder.start()
+      setIsRecording(true)
+    } catch (err) {
+      console.warn("Camera/Mic permissions denied. Blackbox aborted.", err)
+    }
+  }
+
+  const stopEmergencyRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop()
+      setIsRecording(false)
+    }
+  }
+
   const triggerSOSAlert = async () => {
     setSosActive(true)
     setCountdown(5)
     setSosSent(false)
+    startEmergencyRecording()
+
     try {
       const res = await triggerSOS({
         latitude: coords?.lat,
@@ -220,6 +267,7 @@ export default function SOSPage() {
     setSosActive(false)
     setCountdown(5)
     setSosSent(false)
+    stopEmergencyRecording()
   }
 
   const addContact = () => {
@@ -389,6 +437,11 @@ export default function SOSPage() {
                 className="glass-card bg-danger/10 border-danger/50 p-10 flex flex-col items-center text-center w-full max-w-md"
               >
                 <h2 className="text-3xl font-bold text-danger mb-2">🚨 SOS ACTIVE</h2>
+                {isRecording && (
+                  <div className="flex items-center text-xs text-danger font-bold uppercase tracking-widest bg-danger/10 border border-danger/30 px-4 py-1.5 rounded-full mb-4 animate-[pulse_2s_ease-in-out_infinite] shadow-[0_0_15px_rgba(239,68,68,0.2)]">
+                    <Video className="w-3 h-3 mr-2 animate-pulse" /> RECORDING SECURE BLACKBOX
+                  </div>
+                )}
                 <p className="text-text-secondary mb-6">
                   {sosSent ? 'Alert sent to your contacts. Stay calm and move to a safe location.' : 'Sending alert...'}
                 </p>

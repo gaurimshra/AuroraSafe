@@ -1,6 +1,6 @@
 'use client'
 import { useState, useRef } from 'react'
-import { ShieldCheck, MapPin, Send, Loader2, AlertTriangle, LocateFixed, RefreshCw } from 'lucide-react'
+import { ShieldCheck, MapPin, Send, Loader2, AlertTriangle, LocateFixed, RefreshCw, Camera, Mic, Paperclip } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import dynamic from 'next/dynamic'
 import { useUser } from '@clerk/nextjs'
@@ -27,6 +27,7 @@ export default function ReportPage() {
   const [address, setAddress] = useState('')
   const [description, setDescription] = useState('')
   const [locating, setLocating] = useState(false)
+  const [mediaFile, setMediaFile] = useState<File | null>(null)
   const descRef = useRef<HTMLTextAreaElement>(null)
 
   const useMyLocation = () => {
@@ -81,7 +82,7 @@ export default function ReportPage() {
   }
 
   const resetForm = () => {
-    setSubmitted(false); setResult(null); setDescription(''); setError('')
+    setSubmitted(false); setResult(null); setDescription(''); setError(''); setMediaFile(null)
   }
 
   return (
@@ -157,6 +158,28 @@ export default function ReportPage() {
                 className="w-full bg-surface border border-border rounded-lg px-4 py-3 text-text text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all resize-none"
               />
               <p className="text-xs text-text-muted">{description.length} characters — be specific for better AI classification</p>
+            </div>
+
+            {/* Evidence Native Capture */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-text-secondary">Attach Evidence <span className="text-text-muted">(optional - stored locally)</span></label>
+              <div className="flex gap-3">
+                <label className="flex-1 bg-surface border border-border rounded-lg py-3 flex items-center justify-center gap-2 cursor-pointer hover:border-primary transition-colors hover:text-primary text-sm text-text-secondary">
+                  <Camera className="w-4 h-4" />
+                  <span>Take Photo</span>
+                  <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => setMediaFile(e.target.files?.[0] || null)} />
+                </label>
+                <label className="flex-1 bg-surface border border-border rounded-lg py-3 flex items-center justify-center gap-2 cursor-pointer hover:border-accent transition-colors hover:text-accent text-sm text-text-secondary">
+                  <Mic className="w-4 h-4" />
+                  <span>Voice Note</span>
+                  <input type="file" accept="audio/*" capture="user" className="hidden" onChange={(e) => setMediaFile(e.target.files?.[0] || null)} />
+                </label>
+              </div>
+              {mediaFile && (
+                <div className="text-xs text-primary font-medium flex items-center gap-1 mt-2 bg-primary/10 p-2 rounded-lg border border-primary/20">
+                  <Paperclip className="w-3 h-3" /> Attached: {mediaFile.name} ({(mediaFile.size / 1024 / 1024).toFixed(2)} MB)
+                </div>
+              )}
             </div>
 
             {error && (

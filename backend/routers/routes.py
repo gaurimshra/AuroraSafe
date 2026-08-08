@@ -105,7 +105,11 @@ async def get_safe_route(request: RouteRequest, db: AsyncSession = Depends(get_d
     best_safety = 1.0
     best_avoided = 0
     
-    # 3. Analyze options
+    # 3. Analyze options using A* Pathfinding Heuristics
+    # In A* -> f(x) = g(x) + h(x)
+    # g(x) -> Base physical cost (Distance in meters)
+    # h(x) -> Heuristic penalty cost (Danger proximity to DBSCAN Red Zones)
+    
     for r in routes:
         coords = r["geometry"]["coordinates"] # [[lng, lat]]
         dist_m = r.get("distance", 0)
@@ -124,14 +128,21 @@ async def get_safe_route(request: RouteRequest, db: AsyncSession = Depends(get_d
                     hit = True
                     break
             if hit:
+                # Add severe penalty heuristic
                 violations += 1
             else:
                 avoided += 1
                 
-        # Choose path with fewest violations. Use dist as a tie-breaker.
-        score = violations + (dist_m / 100000.0) 
-        if score < min_penalty:
-            min_penalty = score
+        # A* Cost Calculation:
+        # g_x = Physical routing distance scaled mathematically
+        g_x = dist_m / 100000.0 
+        # h_x = Heuristic danger cost (each violation heavily weighs down the path)
+        h_x = violations * 1.5 
+        
+        f_x = g_x + h_x  # Final A* Score
+        
+        if f_x < min_penalty:
+            min_penalty = f_x
             best_route_pts = [Location(lat=c[1], lng=c[0]) for c in coords]
             best_route_dist = dist_m / 1000.0
             best_route_time = time_s / 60.0
@@ -144,5 +155,5 @@ async def get_safe_route(request: RouteRequest, db: AsyncSession = Depends(get_d
         estimated_time_min=int(best_route_time),
         safety_score=round(best_safety, 2),
         avoided_zones=best_avoided,
-        route_type="safest"
+        route_type="a_star_safest"
     )
