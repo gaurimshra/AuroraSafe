@@ -29,6 +29,7 @@ async def get_incidents(
     radius_km: Optional[float] = None,
     status: Optional[str] = None,
     user_id: Optional[str] = None,
+    source: Optional[str] = None,
     limit: int = 100,
     db: AsyncSession = Depends(get_db)
 ):
@@ -37,6 +38,8 @@ async def get_incidents(
         query = query.where(Incident.status == status)
     if user_id:
         query = query.where(Incident.reported_by == user_id)
+    if source:
+        query = query.where(Incident.source.in_(source.split(',')))
     
     result = await db.execute(query)
     incidents = result.scalars().all()
@@ -71,6 +74,7 @@ async def create_incident(inc: IncidentCreate, db: AsyncSession = Depends(get_db
         longitude=inc.longitude,
         description=inc.description,
         address=inc.address,
+        reported_by=inc.reported_by,
         incident_type=classification.get("incident_type", "other"),
         severity=severity,
         threat_category=classification.get("threat_category", "other"),

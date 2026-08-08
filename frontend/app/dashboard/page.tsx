@@ -1,12 +1,15 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { AlertTriangle, ShieldCheck, Clock, Activity, Loader2, RefreshCw, Sun, CloudRain, Newspaper, LifeBuoy, Users, History } from 'lucide-react'
+import Link from 'next/link'
+import { AlertTriangle, ShieldCheck, Clock, Activity, Loader2, RefreshCw, Sun, CloudRain, Newspaper, LifeBuoy, Users, History, ChevronRight, Info, ExternalLink } from 'lucide-react'
 import dynamic from 'next/dynamic'
 
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell } from 'recharts'
 import RiskBadge from '@/components/RiskBadge'
-import { getDashboardStats, getDashboardTrends, getDashboardCategories, getZones, getWeather } from '@/lib/api'
+import HighRiskZoneModal from '@/components/HighRiskZoneModal'
+import IncidentCard from '@/components/IncidentCard'
+import { getDashboardStats, getDashboardTrends, getDashboardCategories, getZones, getWeather, getNewsIncidents, getSOSHistory, getIncidents } from '@/lib/api'
 
 const ZONE_COLORS: Record<string, string> = {
   theft: '#f59e0b',
@@ -27,6 +30,20 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const [weather, setWeather] = useState<any>(null)
+  const [newsIncidents, setNewsIncidents] = useState<any[]>([])
+  const [sosHistory, setSosHistory] = useState<any[]>([])
+  const [recentIncidents, setRecentIncidents] = useState<any[]>([])
+  const [newsExpanded, setNewsExpanded] = useState(false)
+  const [selectedZone, setSelectedZone] = useState<any[] | null>(null)
+
+  const timeAgo = (dateStr: string) => {
+    if (!dateStr) return 'Unknown'
+    const minDiff = Math.round((new Date().getTime() - new Date(dateStr).getTime()) / 60000)
+    if (minDiff < 60) return `${minDiff} min ago`
+    const hrDiff = Math.floor(minDiff / 60)
+    if (hrDiff < 24) return `${hrDiff} hr ago`
+    return `${Math.floor(hrDiff / 24)} days ago`
+  }
 
   const customTooltipStyle = {
     backgroundColor: '#111128',
@@ -37,15 +54,21 @@ export default function DashboardPage() {
 
   const loadData = async () => {
     try {
-      const [statsData, trendsData, catData, zonesData, wData] = await Promise.all([
+      const [statsData, trendsData, catData, zonesData, wData, newsData, sosData, recentData] = await Promise.all([
         getDashboardStats(),
         getDashboardTrends(),
         getDashboardCategories(),
         getZones(),
-        getWeather('Delhi').catch(() => null)
+        getWeather('Delhi').catch(() => null),
+        getNewsIncidents(6).catch(() => []),
+        getSOSHistory().catch(() => []),
+        getIncidents({ limit: 10 }).catch(() => [])
       ])
       setStats(statsData)
       if (wData) setWeather(wData)
+      setNewsIncidents(newsData)
+      setSosHistory(sosData)
+      setRecentIncidents(recentData)
       // Format trends for chart (last 14 days, with day names)
       const formattedTrends = trendsData.slice(-14).map((t: any) => ({
         name: new Date(t.date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }),
@@ -74,11 +97,12 @@ export default function DashboardPage() {
     return () => clearInterval(interval)
   }, [])
 
-  const StatCard = ({ label, value, icon: Icon, color, bg }: any) => (
+  const StatCard = ({ label, value, icon: Icon, color, bg, onClick }: any) => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="glass-card p-6 flex items-center space-x-4"
+      onClick={onClick}
+      className={`glass-card p-6 flex items-center space-x-4 ${onClick ? 'cursor-pointer hover:border-primary transition-colors border border-transparent' : ''}`}
     >
       <div className={`p-4 rounded-xl ${bg}`}>
         <Icon className={`w-7 h-7 ${color}`} />
@@ -118,7 +142,7 @@ export default function DashboardPage() {
 
       {/* Weather Strip */}
       {weather && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-6 glass-card p-4 flex items-center justify-between" style={{ borderLeft: '4px solid var(--primary)' }}>
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-6 glass-card p-4 flex items-center justify-between border-l-4 border-primary">
           <div className="flex items-center gap-4">
             <span className="flex items-center justify-center text-3xl">{weather.safety_factor < 0.8 ? <CloudRain size={32} /> : <Sun size={32} />}</span>
             <div>
@@ -138,25 +162,61 @@ export default function DashboardPage() {
       {/* Data Source Breakdown */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div className="glass-card p-4 border border-border/50">
-          <div className="text-xs text-text-secondary mb-1 flex items-center gap-1.5"><Newspaper size={14} /> AI-Verified News</div>
+          <div className="flex justify-between items-start mb-1">
+            <div className="text-xs text-text-secondary flex items-center gap-1.5"><Newspaper size={14} /> AI-Verified News</div>
+            <button onClick={() => setNewsExpanded(!newsExpanded)} className="text-xs text-primary hover:underline">{newsExpanded ? 'Collapse' : 'Expand'}</button>
+          </div>
           <div className="text-xl font-bold text-primary">
             {(stats?.source_counts?.newsapi || 0) + (stats?.source_counts?.gnews || 0) + (stats?.source_counts?.fallback_news || 0)}
           </div>
+          {newsExpanded && (
+            <div className="mt-4 space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+              {newsIncidents.length === 0 ? <div className="text-xs text-text-secondary">No news incidents yet</div> : newsIncidents.map((inc, i) => (
+                <div key={i} className="text-sm bg-surface p-2 rounded-lg border border-border/50">
+                  <div className="flex justify-between mb-1">
+                    <span className="text-[10px] font-bold text-primary uppercase bg-primary/10 px-1.5 py-0.5 rounded">{inc.source}</span>
+                    <span className="text-[10px] text-text-secondary">{timeAgo(inc.created_at)}</span>
+                  </div>
+                  <div className="font-medium text-text-secondary line-clamp-2 leading-tight mb-1">{inc.ai_summary}</div>
+                  <div className="flex justify-between items-center text-[10px] text-text-muted">
+                    <span className="truncate flex-1 mr-2">{inc.address}</span>
+                    {inc.news_url && <a href={inc.news_url} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline flex items-center gap-1"><ExternalLink size={10} /> Link</a>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-        <div className="glass-card p-4 border border-border/50">
+        <div className="glass-card p-4 border border-border/50 flex flex-col">
           <div className="text-xs text-text-secondary mb-1 flex items-center gap-1.5"><LifeBuoy size={14} /> Emergency Triggers</div>
-          <div className="text-xl font-bold text-danger">
+          <div className="text-xl font-bold text-danger mb-3">
             {stats?.source_counts?.sos || 0}
           </div>
-        </div>
-        <div className="glass-card p-4 border border-border/50">
-          <div className="text-xs text-text-secondary mb-1 flex items-center gap-1.5"><Users size={14} /> Community Reports</div>
-          <div className="text-xl font-bold text-warning">
-            {stats?.source_counts?.user_report || 0}
+          <div className="flex-1 overflow-y-auto max-h-40 space-y-2 pr-2 custom-scrollbar">
+            {sosHistory.length === 0 ? <div className="text-xs text-text-secondary">No recent triggers</div> : sosHistory.slice(0, 5).map((sos, i) => (
+              <div key={i} className="text-xs bg-danger/10 border border-danger/20 p-2 rounded-lg">
+                <div className="flex justify-between text-danger mb-1"><span className="font-bold">{timeAgo(sos.created_at)}</span><span>{sos.contact_count} contacts</span></div>
+                <div className="text-text-secondary truncate">{sos.location_text}</div>
+              </div>
+            ))}
           </div>
         </div>
+        <Link href="/community" className="glass-card p-4 border border-border/50 hover:border-primary transition-colors cursor-pointer group flex flex-col justify-between">
+          <div>
+            <div className="text-xs text-text-secondary mb-1 flex items-center gap-1.5"><Users size={14} /> Community Reports</div>
+            <div className="text-xl font-bold text-warning">
+              {stats?.source_counts?.user_report || 0}
+            </div>
+          </div>
+          <div className="text-xs text-primary flex items-center mt-2 group-hover:translate-x-1 transition-transform">View feed <ChevronRight className="w-3 h-3 ml-1" /></div>
+        </Link>
         <div className="glass-card p-4 border border-border/50">
-          <div className="text-xs text-text-secondary mb-1 flex items-center gap-1.5"><History size={14} /> Verified Incident Database (Archive)</div>
+          <div className="text-xs text-text-secondary mb-1 flex items-center justify-between">
+            <span className="flex items-center gap-1.5"><History size={14} /> Verified Incident Database (Archive)</span>
+            <span title="Synthetic baseline data used to bootstrap the risk model and demonstrate clustering — not a live feed.">
+              <Info size={14} className="text-text-muted cursor-help" />
+            </span>
+          </div>
           <div className="text-xl font-bold text-text-3">
             {stats?.source_counts?.seed_data || 0}
           </div>
@@ -166,7 +226,7 @@ export default function DashboardPage() {
       {/* Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
         <StatCard label="Total Incidents" value={stats?.total_incidents ?? '—'} icon={Activity} color="text-primary" bg="bg-primary/20" />
-        <StatCard label="High Risk Zones" value={stats?.high_risk_zones ?? '—'} icon={AlertTriangle} color="text-danger" bg="bg-danger/20" />
+        <StatCard label="High Risk Zones" value={stats?.high_risk_zones ?? '—'} icon={AlertTriangle} color="text-danger" bg="bg-danger/20" onClick={() => setSelectedZone(zones.filter((z: any) => z.risk_level === 'red'))} />
         <StatCard
           label="Verified Reports"
           value={stats ? `${Math.round((stats.verified_incidents / (stats.total_incidents || 1)) * 100)}%` : '—'}
@@ -176,9 +236,9 @@ export default function DashboardPage() {
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
         {/* Area chart — trends */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="glass-card p-6">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="glass-card p-6 lg:col-span-2 flex flex-col">
           <h3 className="text-lg font-bold mb-6">Incidents Over Time (Last 14 Days)</h3>
           {(!isMounted || (trends.length === 0 && loading)) ? (
             <div className="h-[300px] flex items-center justify-center">
@@ -211,10 +271,21 @@ export default function DashboardPage() {
               </ResponsiveContainer>
             </div>
           )}
+
+          <div className="mt-8 border-t border-border/50 pt-6">
+            <h3 className="text-md font-bold mb-4">Recent Incidents</h3>
+            <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar">
+              {recentIncidents.map(inc => (
+                <div key={inc.id} className="w-72 shrink-0">
+                  <IncidentCard incident={inc} />
+                </div>
+              ))}
+            </div>
+          </div>
         </motion.div>
 
         {/* Pie chart — incident categories */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="glass-card p-6">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="glass-card p-6 lg:col-span-1">
           <h3 className="text-lg font-bold mb-6">Incident Categories</h3>
           {(!isMounted || (categories.length === 0 && loading)) ? (
             <div className="h-[300px] flex items-center justify-center">
@@ -266,7 +337,7 @@ export default function DashboardPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {zones.map((zone, i) => (
-                  <tr key={i} className="hover:bg-surface/30 transition-colors">
+                  <tr key={i} className="hover:bg-surface/30 transition-colors cursor-pointer" onClick={() => setSelectedZone([zone])}>
                     <td className="px-6 py-4 font-mono text-sm text-text">
                       {zone.lat.toFixed(4)}, {zone.lng.toFixed(4)}
                     </td>
@@ -281,6 +352,8 @@ export default function DashboardPage() {
           </div>
         )}
       </motion.div>
+
+      {selectedZone && <HighRiskZoneModal zones={selectedZone} onClose={() => setSelectedZone(null)} />}
     </div>
   )
 }

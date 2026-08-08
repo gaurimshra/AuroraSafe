@@ -1,55 +1,20 @@
 'use client'
 import { motion } from 'framer-motion'
 import { Shield, MapPin, Phone, MessageCircle, Navigation, Info } from 'lucide-react'
-
-const ngos = [
-  {
-    name: "Hamari Pahchan NGO",
-    email: ["pachhanhamari@gmail.com", "info@hamaripahchan.com"],
-    phones: ["+919911173557", "+918882590888", "+917702050024"],
-    whatsapp: "+917702050024",
-    address: "H. No. 1121, Upper Ground Floor, Mahipalpur Bypass, Opposite Arjun Camp, New Delhi - 110037",
-    lat: 28.545,
-    lng: 77.124
-  },
-  {
-    name: "Guild of Service",
-    email: ["guildofserviceni@gmail.com"],
-    phones: ["+911141013416", "+911141013417"],
-    address: "C-25, Qutub Institutional Area, New Delhi - 110016",
-    lat: 28.535,
-    lng: 77.191
-  },
-  {
-    name: "Centre for Holistic Development (CHD)",
-    email: ["info@chdindia.org.in"],
-    phones: ["+919811327037"],
-    whatsapp: "+919811327037",
-    address: "253, First Floor, Ch. Ishwar Singh Complex, Gora St, Shahpur Jat, Siri Fort, New Delhi, Delhi 110017",
-    lat: 28.549,
-    lng: 77.218 
-  },
-  {
-    name: "Being A Woman NGO",
-    email: ["contact@beingawoman.org"],
-    phones: ["+919717560272"],
-    whatsapp: "+919717560272",
-    address: "F-69/301, Abul Fazal Enclave Part 1, Jamia Nagar, Okhla, New Delhi",
-    lat: 28.562,
-    lng: 77.291
-  },
-  {
-    name: "Somi Foundation",
-    email: ["info@somifoundation.org"],
-    phones: ["+919582949414", "+919811560458"],
-    whatsapp: "+919811560458",
-    address: "New Delhi, Delhi",
-    lat: 28.613,
-    lng: 77.209
-  }
-]
+import { useEffect, useState } from 'react'
+import { getNGOs } from '@/lib/api'
 
 export default function NGOsPage() {
+  const [ngos, setNgos] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    getNGOs()
+      .then(setNgos)
+      .catch(console.error)
+      .finally(() => setLoading(false))
+  }, [])
+
   return (
     <div className="pt-24 min-h-screen px-6 max-w-7xl mx-auto pb-20">
       <div className="mb-10 text-center max-w-2xl mx-auto">
@@ -61,7 +26,12 @@ export default function NGOsPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-8 gap-6">
+      {loading ? (
+        <div className="flex justify-center items-center py-20">
+          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-8 gap-6">
         {ngos.map((ngo, index) => (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -118,6 +88,7 @@ export default function NGOsPage() {
           </motion.div>
         ))}
       </div>
+      )}
     </div>
   )
 }
