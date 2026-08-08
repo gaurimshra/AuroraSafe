@@ -7,6 +7,7 @@ class IncidentCreate(BaseModel):
     longitude: float
     description: str
     address: Optional[str] = None
+    reported_by: Optional[str] = None
 
 class IncidentResponse(BaseModel):
     id: str

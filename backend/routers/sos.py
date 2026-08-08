@@ -11,6 +11,7 @@ from models.sos_contact import SOSContact
 from models.sos_event import SOSEvent
 from models.incident import Incident
 from pydantic import BaseModel
+from typing import Optional, List
 
 router = APIRouter()
 
@@ -18,22 +19,22 @@ class SOSContactCreate(BaseModel):
     user_id: str
     name: str
     phone: str
-    email: str = None
+    email: Optional[str] = None
 
 class SOSContactResponse(BaseModel):
     id: str
     user_id: str
     name: str
     phone: str
-    email: str
+    email: Optional[str] = None
     model_config = {"from_attributes": True}
 
 class SOSTriggerRequest(BaseModel):
-    latitude: float = None
-    longitude: float = None
-    location_text: str = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    location_text: Optional[str] = None
     contacts: list = []
-    user_id: str = None
+    user_id: Optional[str] = None
 
 @router.post("/trigger")
 async def trigger_sos(request: SOSTriggerRequest, db: AsyncSession = Depends(get_db)):

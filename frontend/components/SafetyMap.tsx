@@ -102,7 +102,7 @@ export default function SafetyMap({
   safeHavens = [],
   route = null,
   onMapClick,
-  center = [12.9716, 77.5946],
+  center = [28.6139, 77.2090],
   zoom = 13,
   userLocation
 }: MapProps) {

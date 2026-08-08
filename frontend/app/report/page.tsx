@@ -3,6 +3,7 @@ import { useState, useRef } from 'react'
 import { ShieldCheck, MapPin, Send, Loader2, AlertTriangle, LocateFixed, RefreshCw } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import dynamic from 'next/dynamic'
+import { useUser } from '@clerk/nextjs'
 import RiskBadge from '@/components/RiskBadge'
 import { createIncident } from '@/lib/api'
 import { reverseGeocode } from '@/lib/geocode'
@@ -17,6 +18,7 @@ const MapSelector = dynamic(() => import('@/components/SafetyMap'), {
 })
 
 export default function ReportPage() {
+  const { user } = useUser()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [result, setResult] = useState<any>(null)
@@ -66,7 +68,8 @@ export default function ReportPage() {
         latitude: coords.lat,
         longitude: coords.lng,
         description: description.trim(),
-        address: address || undefined
+        address: address || undefined,
+        reported_by: user?.id
       })
       setResult(data)
       setSubmitted(true)

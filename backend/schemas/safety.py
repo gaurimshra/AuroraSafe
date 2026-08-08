@@ -20,3 +20,5 @@ class HotspotZone(BaseModel):
     risk_level: str
     incident_count: int
     dominant_type: str
+    avg_severity: Optional[float] = None
+    avg_risk_score: Optional[float] = None

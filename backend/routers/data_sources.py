@@ -142,6 +142,20 @@ async def get_police_stations():
     }
 
 
+@router.get("/ngos")
+async def get_ngos():
+    """
+    Returns verified NGOs from local JSON.
+    """
+    import os
+    import json
+    ngo_file = os.path.join(os.path.dirname(__file__), "..", "data", "ngos.json")
+    if os.path.exists(ngo_file):
+        with open(ngo_file, "r") as f:
+            return json.load(f)
+    return []
+
+
 @router.get("/nearby-pois")
 async def get_nearby_pois(
     lat: float = Query(..., description="Latitude"),

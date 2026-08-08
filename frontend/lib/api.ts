@@ -8,6 +8,8 @@ export const api = axios.create({
 
 export const getHeatmap = () => api.get('/safety/heatmap').then(r => r.data)
 export const getIncidents = (params?: any) => api.get('/incidents/', { params }).then(r => r.data)
+export const getIncidentById = (id: string) => api.get(`/incidents/${id}`).then(r => r.data)
+export const getNewsIncidents = (limit = 6) => api.get('/incidents/', { params: { source: 'newsapi,gnews', limit } }).then(r => r.data)
 export const createIncident = (data: any) => api.post('/incidents/', data).then(r => r.data)
 export const voteIncident = (id: string, vote: 'up' | 'down') => api.put(`/incidents/${id}/vote`, { vote }).then(r => r.data)
 export const getRiskScore = (lat: number, lng: number) => 
@@ -40,3 +42,5 @@ export const getAllWeather = () => api.get('/data-sources/weather/all').then(r =
 export const getTriggerNews = () => api.post('/data-sources/trigger/news').then(r => r.data)
 export const getDataSourceStatus = () => api.get('/data-sources/status').then(r => r.data)
 export const getPoliceStations = () => api.get('/data-sources/police-stations').then(r => r.data)
+export const getNGOs = () => api.get('/data-sources/ngos').then(r => r.data)
+export const getNearbyPOIs = (lat: number, lng: number) => api.get('/data-sources/nearby-pois', { params: { lat, lng } }).then(r => r.data)
