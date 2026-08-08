@@ -20,12 +20,16 @@ async def get_stats(db: AsyncSession = Depends(get_db)):
     pending = sum(1 for i in incidents if i.status == "pending")
     total_upvotes = sum(i.upvotes for i in incidents)
 
+    from models.sos_event import SOSEvent
+    sos_result = await db.execute(select(func.count()).select_from(SOSEvent))
+    sos_count = sos_result.scalar() or 0
+
     # Explicit source counts — handles None and alias variants
     source_counts = {
         "seed_data": sum(1 for i in incidents if (i.source or '') in ('seed_data', 'police_db', 'transit_api', 'city_sensors')),
         "newsapi": sum(1 for i in incidents if (i.source or '') in ('newsapi', 'news_api', 'gnews')),
         "gnews": sum(1 for i in incidents if (i.source or '') == 'gnews'),
-        "sos": sum(1 for i in incidents if (i.source or '') == 'sos' or i.incident_type == 'sos_emergency'),
+        "sos": sos_count,
         "user_report": sum(1 for i in incidents if (i.source or '') in ('user_report', '', None) and i.incident_type != 'sos_emergency'),
     }
     zone_counts = {
