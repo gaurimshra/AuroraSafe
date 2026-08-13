@@ -144,29 +144,4 @@ AuroraSafe combines community reports, live scraped news, AI classification, and
 
 On backend startup, the app gracefully initializes all background jobs, seeds fallbacks if necessary, and compiles the ML models dynamically.
 
-## Deployment Notes
-
-For production-style deployment:
-
-- Replace SQLite with Postgres or another managed database.
-- Use a strong `SECRET_KEY`.
-- Restrict CORS origins in `backend/config.py`.
-- Configure a real SMS/email provider for SOS notifications.
-- Store secrets in environment variables, not committed files.
-- Host the FastAPI backend and set `NEXT_PUBLIC_API_URL` to the deployed API URL before building the frontend.
-
-## Git Push Checklist
-
-Before pushing:
-
-```powershell
-git init
-git add .
-git commit -m "Initial AuroraSafe app"
-git branch -M main
-git remote add origin <your-repo-url>
-git push -u origin main
-```
-
-Do not commit local `.env` files, `node_modules`, `.next`, logs, SQLite databases, Python caches, or generated model files unless you intentionally want them in the repository.
 
