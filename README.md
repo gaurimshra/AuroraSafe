@@ -9,7 +9,6 @@ The project is built as a full-stack app:
 - AI/ML: Gemini incident classification, XGBoost risk prediction, DBSCAN hotspot detection
 
 > Note: AuroraSafe is a demo/hackathon-grade safety application. It is not a replacement for emergency services.
-
 ## Features
 
 - Interactive safety map with heatmap overlays
