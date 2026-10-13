@@ -1,4 +1,4 @@
-# AuroraSafe
+# AuroraSafe webapp for Women Safety
 
 AuroraSafe is an AI-powered predictive safety intelligence platform. It helps users understand local safety risk, report incidents, view danger hotspots, plan safer routes, and trigger an SOS flow from a web dashboard.
 
